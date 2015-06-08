@@ -24,7 +24,7 @@
 from openerp import models, fields, api
 
 
-class Wiz_Sale_Create_Fictitious(models.TransientModel):
+class WizSaleCreateFictitious(models.TransientModel):
     _name = "wiz.sale.create.fictitious"
 
     date_planned = fields.Datetime(
@@ -76,16 +76,32 @@ class Wiz_Sale_Create_Fictitious(models.TransientModel):
                 'res_id':  production_list[0],
                 
                 }
+        
+        
 
+    
     def default_get(self, cr, uid, fields, context=None):
         
-        ret = super(Wiz_Sale_Create_Fictitious,self).default_get(cr, uid, fields, context=context)
-            
+        res = super(WizSaleCreateFictitious, self).default_get(cr, uid, fields, context)    
         if context is None:
             context = {}  
               
         sale_line_obj = self.pool.get('sale.order.line').browse(cr, uid, context['active_id'], context=context)
         sale_order_object =sale_line_obj.order_id      
         project =  sale_order_object.main_project_id
-        ret['project_id'] = project.id
-        return ret
+        res['project_id'] = project.id
+        return res
+    
+    
+class sale_order(models.Model):
+    _inherit = "sale.order.line"
+    
+    def create_mfg_quote(self, cr, uid, ids, context=None):
+        
+        return {'view_type': 'form',
+                'view_mode': 'form',
+                'res_model': 'wiz.sale.create.fictitious',
+                'type': 'ir.actions.act_window',
+                'target':'new',
+                }
+    

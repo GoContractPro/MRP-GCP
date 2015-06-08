@@ -41,6 +41,7 @@
                         name="%(act_sale_create_fictitious)d" 
                         string="Create MFG Quote" type="action"
                           />
+                   <button name="create_mfg_quote" string="MFG Quote" type="object" class="oe_highlight" />
                  </field>
             </field>
         </record>
