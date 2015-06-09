@@ -1,0 +1,20 @@
+<?xml version="1.0" ?>
+<openerp>
+    <data noupdate="1">
+        <!--Estimated materials analytic journal -->
+        <record id="25_percent_prod_sale_margin" model="production.sale.margin">
+            <field name="name">25% Margin</field>
+            <field name="multiplier">1.25</field>
+        </record>
+        <!--Estimated operators analytic journal -->
+        <record id="30_percent_prod_sale_margin" model="production.sale.margin">
+            <field name="name">30% Margin</field>
+            <field name="multiplier">1.30</field>
+        </record>
+        <!--Estimated machines analytic journal -->
+        <record id="35_percent_prod_sale_margin" model="production.sale.margin">
+            <field name="name">35% Margin</field>
+            <field name="multiplier">1.35</field>
+        </record>
+    </data>
+</openerp>

@@ -18,4 +18,6 @@
 #    along with this program.  If not, see <http://www.gnu.org/licenses/>
 #
 ##############################################################################
-import sale
+import wiz_sales_create_mo
+import mrp_production
+import sale_order

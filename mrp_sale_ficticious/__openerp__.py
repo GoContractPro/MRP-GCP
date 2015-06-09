@@ -35,6 +35,8 @@
     'init_xml': [],
     'data': [
         "views/view.xml",
+        "data/prod_sale_margin_data.xml",
+        "data/sale_mrp_production_sequence.xml"
         ],
     'demo_xml': [],
     'test': [],

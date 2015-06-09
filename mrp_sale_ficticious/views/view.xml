@@ -6,10 +6,19 @@
             <field name="model">wiz.sale.create.fictitious</field>
             <field name="arch" type="xml">
                 <form string="Create MFG Quote">
-                    <group string="Create fictitious MO">
-                        <field name="date_planned" />
+                	<group string="Create MFG Quote">
+                 		<field name="product_id"  domain="[('bom_ids','!=',False),('bom_ids.type','!=','phantom')]" 
+                 					on_change="product_id_change(product_id, product_qty)" 
+                 					class="oe_inline" context='{"default_type": "product"}'/>
+                        <field name="product_qty" class="oe_inline" />
+                        <field name="product_uom"  invisible='0' readonly='0' />
+                        <field name="bom_id"/>
+                        <field name="routing_id" />
+                        
+						<field name="date_planned" />
                         <field name="load_on_product" />
                         <field name="project_id" />
+                        <field name="sale_order_id" readonly='1' invisible='0'/>
                     </group>
                     <footer>
                         <button name="do_create_fictitious_of_sale" type="object" string="Create MFG Quote" class="oe_highlight" />
@@ -19,16 +28,8 @@
                 </form>
             </field>
         </record>
-         
-         
-            
-        <act_window name="Create MFG Quote"
-            res_model="wiz.sale.create.fictitious"
-            src_model="sale.order.line"
-            view_mode="form"
-            target="new"
-            key2="client_action_multi"
-            id="act_sale_create_fictitious"/>
+
+
 
     
         <record id="sale_form_view_bom_button_inh_estimatedcost" model="ir.ui.view">
@@ -36,14 +37,32 @@
             <field name="model">sale.order</field>
             <field name="inherit_id" ref="sale.view_order_form"/>
             <field name="arch" type="xml">
-                 <field name="product_id" position="before">
-                    <button class="oe_highlight"
-                        name="%(act_sale_create_fictitious)d" 
-                        string="Create MFG Quote" type="action"
-                          />
-                   <button name="create_mfg_quote" string="MFG Quote" type="object" class="oe_highlight" />
+                 <field name="price_unit" position="after">
+	                 <group>
+							<field name="production_id" readonly='1'/>
+							<field name="production_avg_cost" />
+							<field name="production_std_cost" />
+							<field name="production_sale_margin_id" on_change="onchange_production_sale_margin(production_sale_margin_id)"/>
+	                 </group>
+                 </field>
+                 
+                <xpath expr="//field[@name='order_line']/tree//field[@name='price_subtotal']" position="after">
+                    <field name="production_id" readonly='1'/>
+                    <button name="action_view_mos" string="MFG Quote" type="object" class="oe_highlight"  />
+                </xpath>
+                 
+                 <field name="project_id" position='after'>
+                   		<button name="create_mfg_quote" string="Create MFG Quote" type="object" class="oe_highlight" />   		
+                   		
                  </field>
             </field>
+        </record>
+        
+        
+        <record id="act_sales_mrp_production" model="ir.actions.act_window">
+            <field name="name">Manufacturing Orders</field>
+            <field name="res_model">mrp.production</field>
+            <field name="view_id" ref="mrp.mrp_production_form_view"/>
         </record>
        
     </data>
