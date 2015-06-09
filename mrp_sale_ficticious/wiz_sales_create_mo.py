@@ -67,7 +67,7 @@ class WizSaleCreateFictious(models.TransientModel):
                     'product_qty': 1,
                     'date_planned': self.date_planned,
                     'user_id': self._uid,
-                    'active': False,
+                    'active': True,
                     'product_qty': self.product_qty,
                     'product_uom' :self.product_uom.id,
                     'bom_id': self.bom_id.id,
