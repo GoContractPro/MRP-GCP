@@ -21,7 +21,7 @@
 ##############################################################################
 
 {
-    'name': 'MRP Sale Fictitious ',
+    'name': 'MRP Sale Quotes ',
     'version': '1.0',
     'category': '',
     'complexity': "easy",
@@ -31,7 +31,7 @@
     """,
     'author': 'NovaPoint Group Inc, Stephen Levenhagen',
     'website': 'www.novapointgroup.com',
-    'depends': ['sale','mrp_production_project_estimated_cost'],
+    'depends': ['sale','mrp','mrp_production_project_estimated_cost',],
     'init_xml': [],
     'data': [
         "views/view.xml",

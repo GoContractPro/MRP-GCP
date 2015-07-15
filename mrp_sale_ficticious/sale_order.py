@@ -21,6 +21,7 @@
 
 from openerp import models, fields, api, _
 
+
 class ProductionSalesMargin(models.Model):
     
     _name = 'production.sale.margin'
@@ -34,7 +35,7 @@ class sale_order_line(models.Model):
     
     _inherit = ["sale.order.line"]
     
-    production_id = fields.Many2one('mrp.production', 'Manufacturing Quote')
+    production_id = fields.Many2one('mrp.production', 'Manufacturing Order',ondelete='cascade')
     production_avg_cost = fields.Float('MFG Unit Average Cost')
     production_std_cost = fields.Float('MFG Unit Standard Cost')
     production_sale_margin_id = fields.Many2one('production.sale.margin','Mfg Sales Multiplier ')
@@ -59,7 +60,9 @@ class sale_order_line(models.Model):
             res['value']= {'price_unit': self.production_avg_cost * margin.multiplier }
 
         return res
-            
+    
+
+      
     @api.multi
     def action_view_mos(self):
         
@@ -70,7 +73,7 @@ class sale_order_line(models.Model):
                     "res_model": "mrp.production",
                     "views": [[False, "form"]],
                     "res_id": self.production_id.id,
-                    "target": "new",
+                    "target": "window",
                     }
         
             return result
@@ -78,7 +81,24 @@ class sale_order_line(models.Model):
             
             return False
 
-            
+    @api.multi
+    def button_cancel(self):
+        res = super(sale_order_line,self).button_cancel()
+        return res
+    
+    @api.multi
+    def button_confirm(self):
+        res = super(sale_order_line,self).button_confirm()
+#        sale_lines = self.env['sale.order.line'].browse(ids)
+        
+        for sale_line in self:
+            if sale_line.production_id:
+                sequence_obj = self.env['ir.sequence']
+                if sale_line.production_id.is_sale_quote:
+                    name = sequence_obj.get('mrp.production')
+                    sale_line.production_id.write({'is_sale_quote':False,'name':name,})
+        return  res 
+
     
 class sale_order(models.Model):
     _inherit = "sale.order"
@@ -93,4 +113,5 @@ class sale_order(models.Model):
                 'type': 'ir.actions.act_window',
                 'target':'new',
                 }
-    
+ 
+

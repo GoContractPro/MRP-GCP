@@ -16,7 +16,8 @@
                         <field name="routing_id" />
                         
 						<field name="date_planned" />
-                        <field name="load_on_product" />
+                        <field name="load_on_product" invisible='1' />
+                        <field name="production_sale_margin_id" required='1'/>
                         <field name="project_id" />
                         <field name="sale_order_id" readonly='1' invisible='0'/>
                     </group>
@@ -46,37 +47,129 @@
                  
                 <xpath expr="//field[@name='order_line']/tree//field[@name='price_subtotal']" position="after">
                     <field name="production_id" readonly='1'/>
-                    <button name="action_view_mos" string="MFG Quote" type="object" class="oe_highlight"  />
+                    <button name="action_view_mos" string="View MFG" type="object" class="oe_highlight" 
+                    attrs="{'invisible':[('production_id','=',False)]}"/>
                 </xpath>
                  
-                 <field name="project_id" position='after'>
-                   		<button name="create_mfg_quote" string="Create MFG Quote" type="object" class="oe_highlight" />   		
-                   		
+                 <field name="order_line" position='before'>
+                   		<button name="create_mfg_quote" string="Create MFG Quote" states="draft" type="object" class="oe_highlight" />   			
                  </field>
+                 
+                 <field name="product_uom_qty" position="attributes">
+                 	<attribute name="readonly">[('production_id','=',True)] </attribute>
+                 </field>
+                 
+                 <field name="product_id" position="attributes">
+                 	<attribute name="readonly">[('production_id','=',True)] </attribute>
+                 </field>
+
             </field>
         </record>
+        
+        <record id="mrp_production_form_view_inh3" model="ir.ui.view">
+	        <field name="name">mrp.production.form.inherit</field>
+	        <field name="model">mrp.production</field>
+	        <field name="inherit_id" ref="mrp_operations.mrp_production_form_inherit_view"/>
+		        <field name="arch" type="xml">
+		        	<group string="Planned Date" position ="replace"/>
+		        </field>
+        </record>
+        
         
         <record id="mrp_production_form_view_inh2" model="ir.ui.view">
             <field name="name">mrp.production.form.view.inh</field>
             <field name="model">mrp.production</field>
-            <field name="inherit_id" ref="mrp.mrp_production_form_view" />
+            <field name="inherit_id" ref="mrp_operations_extension.mrp_production_form_view_inh" />
             <field name="arch" type="xml">
-            	 <group string="Planned Date" position="replace" />
-           </field>
-        </record>
+            	
+            	 <field name="workcenter_lines" position="attributes">
+            	 	<attribute name="context">{'default_production_id':active_id} </attribute>
+            	 </field>
+            	 
+            	 <field name="production_id" position="attributes">
+            	 	<attribute name="readonly">1</attribute>
+            	 </field>
+         	 
+            	 <page string="Information" position="replace"/>
+            	 
+            	 <page string="Materials" position="before">
+                    <page string="Information">
+                        <group>
+                            <group string="Duration">
+                                <field name="cycle" />
+                                <field name="hour" widget="float_time" />
+                            </group>
+                            <group string="Planned Date">
+                                <field name="date_planned" />
+                                <field name="date_planned_end" />
+                            </group>
+                            <group string="Actual Production Date">
+                                <field name="date_start" readonly="1" />
+                                <field name="date_finished"
+                                    readonly="1" />
+                                <field name="delay" widget="float_time" />
+                            </group>
+                            <group string="Product to Produce">
+                                <field name="product" />
+                                <field name="qty" />
+                                <field name="uom" />
+                            </group>
+                        </group>
+                    </page>
+            		</page> 
+            	 
+           	</field>
+           </record>
+          
+        <record id="sale_mrp_production_project_form_view_inh_estimatedcost" model="ir.ui.view">
+            <field name="name">sale.mrp.production.project.form.view.inh.estimatedcost</field>
+            <field name="model">mrp.production</field>
+            <field name="inherit_id" ref="mrp_project_link.mrp_production_project_form_view"/>
+            <field name="arch" type="xml">
+                <field name="project_id" position="after">
+                    <field name="is_sale_quote" />
+                </field>
+            </field>
+        </record>  
+           
+         <record id="sale_mrp_production_form_view_inh_estimatedcost" model="ir.ui.view">
+            <field name="name">sale.mrp.production.form.view.inh.estimatedcost</field>
+            <field name="model">mrp.production</field>
+            <field name="inherit_id" ref="mrp_production_project_estimated_cost.mrp_production_form_view_inh_estimatedcost"/>
+            <field name="arch" type="xml">
+
+                <button name="button_confirm" position="attributes">
+                    <attribute name="states"></attribute>
+                    <attribute name="attrs">{'invisible':['|',('is_sale_quote','=',True),'|',('active','=',False),('state','!=','draft')]}</attribute>
+                </button>
+         	</field>
+         	</record>
+
         
         <record id="estimated_cost_list_view_inherit1" model="ir.ui.view">
             <field name="name">estimated.cost.list.view</field>
             <field name="model">account.analytic.line</field>
             <field name="inherit_id" ref="mrp_production_project_estimated_cost.estimated_cost_list_view"/>
             <field name="priority" eval="50"/>
-            <field name="arch" type="xml">
+            	<field name="arch" type="xml">
                 
-                 <field name="date" position="after">
-                 	 <field  name="product_id" />
+	                 <field name="date" position="after">
+	                 	 <field  name="product_id" />
+	                 </field>
+	                 
+					<field name="estim_avg_cost" position="attributes" >
+						<attribute name="sum">Total Average</attribute>
+					</field>
+                    
+                    <field name="estim_std_cost" position="attributes">
+                    	<attribute name="sum">Total Standard"</attribute>
+                    </field>	
+                    <field name="amount" postition="attributes">
+                    	<attribute name="sum">Actual Cost</attribute>
+                    	
+                    </field>
                  
-                 </field>
-            </field>
+            	</field>
             </record>
      
         <record id="act_sales_mrp_production" model="ir.actions.act_window">
@@ -84,6 +177,24 @@
             <field name="res_model">mrp.production</field>
             <field name="" ref="mrp.mrp_production_form_view"/>
         </record>
+       
+        <record id="sale_mrp_fictitious_production_action" model="ir.actions.act_window">
+            <field name="name">Sales Quoted MFG Orders</field>
+            <field name="type">ir.actions.act_window</field>
+            <field name="res_model">mrp.production</field>
+            <field name="view_type">form</field>
+            <field name="view_mode">tree,form,calendar,graph,gantt</field>
+            <field name="view_id" eval="False"/>
+            <field name="search_view_id" ref="mrp.view_mrp_production_filter"/>
+            <field name="domain">[('is_sale_quote','=',True)]</field>
+        </record>
+
+        <menuitem action="sale_mrp_fictitious_production_action" id="menu_sale_mrp_fictitious_production_action"
+            parent="mrp.menu_mrp_manufacturing" sequence="10"/>
+            
+        <delete model="ir.ui.menu" id="mrp_production_project_estimated_cost.menu_mrp_fictitious_production_action" />
+            
+            
        
     </data>
 </openerp>

@@ -31,6 +31,7 @@ class WizSaleCreateFictious(models.TransientModel):
         string='Scheduled Date', required=True, default=fields.Datetime.now())
     load_on_product = fields.Boolean("Load cost on product")
     project_id = fields.Many2one("project.project", string="Project")
+    production_sale_margin_id = fields.Many2one('production.sale.margin','Mfg Sales Multiplier ')
     sale_order_id = fields.Many2one("sale.order", string= "Sales Order")
     product_id = fields.Many2one("product.product" , string="Product")
     product_qty = fields.Float('Product Quantity', digits_compute=dp.get_precision('Product Unit of Measure'))
@@ -60,7 +61,8 @@ class WizSaleCreateFictious(models.TransientModel):
             sale_order = self.env['sale.order'].browse(active_id)
             sale_line = sale_line_obj.create({'order_id':active_id,
                                               'product_id':self.product_id.id,
-                                              'name':'mfg quote--' + self.product_id.name})
+                                              'name':'mfg quote--' + self.product_id.name,
+                                              'production_sale_margin_id':self.production_sale_margin_id.id})
             product =  sale_line.product_id
 
             vals = {'product_id': product.id,
@@ -68,6 +70,7 @@ class WizSaleCreateFictious(models.TransientModel):
                     'date_planned': self.date_planned,
                     'user_id': self._uid,
                     'active': True,
+                    'is_sale_quote':True,
                     'product_qty': self.product_qty,
                     'product_uom' :self.product_uom.id,
                     'bom_id': self.bom_id.id,
@@ -79,6 +82,7 @@ class WizSaleCreateFictious(models.TransientModel):
                     }
             new_production = production_obj.create(vals)
             new_production.action_compute()
+            new_production.calculate_production_estimated_cost()
             production_list.append(new_production.id)
             if new_production.project_id and self.project_id.id:
                 new_production.project_id.write({"parent_id":self.project_id.analytic_account_id.id})
@@ -92,7 +96,8 @@ class WizSaleCreateFictious(models.TransientModel):
                     production.load_product_std_price()
                 except:
                     continue
-        return {'view_type': 'form',
+        return{}
+        '''return {'view_type': 'form',
                 'view_mode': 'form, tree',
                 'res_model': 'mrp.production',
                 'type': 'ir.actions.act_window',
@@ -101,7 +106,7 @@ class WizSaleCreateFictious(models.TransientModel):
                 "('active','=',False)]",
                 'res_id':  production_list[0],
                 
-                }
+                }'''
         
     def product_id_change(self, cr, uid, ids, product_id, product_qty=0, context=None):
         """ Finds UoM of changed product.
