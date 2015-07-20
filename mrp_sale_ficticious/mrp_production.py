@@ -108,13 +108,13 @@ class MrpProduction(models.Model):
         return super(MrpProduction, self).create(values)
     
     @api.one
-    def write(self, vals):
+    def write(self, vals, update=True, mini=True):
         
         if 'product_qty' in vals and not vals.get('product_qty'):
         
             self.calculate_production_estimated_cost()
             self.env.cr.commit()
             
-        return super(MrpProduction, self).write(vals)
+        return super(MrpProduction, self).write(vals,mini=False)
 
         

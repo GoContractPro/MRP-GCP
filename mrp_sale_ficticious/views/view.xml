@@ -40,7 +40,7 @@
 	                 <group>
 							<field name="production_id" readonly='1'/>
 							<field name="production_avg_cost" />
-							<field name="production_std_cost" />
+							<field name="production_std_cost" invisible='1'/>
 							<field name="production_sale_margin_id" on_change="onchange_production_sale_margin(production_sale_margin_id)"/>
 	                 </group>
                  </field>
@@ -52,7 +52,7 @@
                 </xpath>
                  
                  <field name="order_line" position='before'>
-                   		<button name="create_mfg_quote" string="Create MFG Quote" states="draft" type="object" class="oe_highlight" />   			
+                   		<button name="create_mfg_quote" string="Create MFG Quote" states="draft,sent,progress,manual" type="object" class="oe_highlight" />   			
                  </field>
                  
                  <field name="product_uom_qty" position="attributes">
@@ -159,13 +159,17 @@
 	                 
 					<field name="estim_avg_cost" position="attributes" >
 						<attribute name="sum">Total Average</attribute>
+						<attribute name="string">Estimated Cost</attribute>
 					</field>
                     
                     <field name="estim_std_cost" position="attributes">
                     	<attribute name="sum">Total Standard"</attribute>
+                    	<attribute name="invisible">True</attribute>
+                    	
                     </field>	
-                    <field name="amount" postition="attributes">
-                    	<attribute name="sum">Actual Cost</attribute>
+                    <field name="amount" position="replace">
+                    	<field name="amount" string = "Actual Cost"
+                    	sum="Actual Totals"/>
                     	
                     </field>
                  
