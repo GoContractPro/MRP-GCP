@@ -92,6 +92,8 @@
          	 
             	 <page string="Information" position="replace"/>
             	 
+            	 <field name="cycle" position= "replace" />
+                 <field name="hour" position= "replace" />
             	 <page string="Materials" position="before">
                     <page string="Information">
                         <group>
