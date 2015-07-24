@@ -21,46 +21,16 @@
 
 from openerp import models, fields, api
 
-class procurement_rule(models.Model):
-    _inherit = 'procurement.rule'
-
-    @api.multi
-    def _get_action(self):
-        return [('sale_manufacture', _('Sales MFG Quoted'))] + super(procurement_rule, self)._get_action()
-
 
 class MrpProduction(models.Model):
     _inherit = 'mrp.production'
-    
     
     sale_order_line_id = fields.Many2one("sale.order.line", string= "Sales Line", ondelete='cascade')
     sale_order_id = fields.Many2one("sale.order", string= "Sales Line")
     sale_project_id =  fields.Many2one("project.project", string="Sales Project")
     is_sale_quote = fields.Boolean("Confirmed Quote")
-              
-    
-    
-    @api.multi
-    def calculate_production_estimated_cost(self):
-        
-        super(MrpProduction, self).calculate_production_estimated_cost()
-        
-        unit_std_cost = -self.unit_std_cost
-        unit_avg_cost = -self.unit_avg_cost
-        
-        if self.sale_order_line_id.production_sale_margin_id :
-            
-            price = unit_avg_cost * (self.sale_order_line_id.production_sale_margin_id.multiplier or 1.0)
-        
-        else:
-            price = 1.0
+   
 
-        self.sale_order_line_id.write({'production_avg_cost':unit_avg_cost,
-                                'purchase_price': unit_avg_cost,
-                                'production_std_cost': unit_std_cost,
-                                'price_unit':price,
-                                'product_uom_qty':self.product_qty })
-    
     @api.multi
     def action_show_estimated_costs(self):
         self.ensure_one()

@@ -19,45 +19,33 @@
 #
 ##############################################################################
 
-from datetime import datetime
-from dateutil.relativedelta import relativedelta
-from openerp.osv import osv, fields
-from openerp.tools.translate import _
-from openerp.tools import DEFAULT_SERVER_DATETIME_FORMAT
-from openerp import SUPERUSER_ID
+from openerp import models, fields, api
 
-class procurement_order(osv.osv):
+class procurement_rule(models.Model):
+    _inherit = 'procurement.rule'
+
+    @api.multi
+    def _get_action(self):
+        return [('sale_manufacture', _('Sales MFG Quoted'))] + super(procurement_rule, self)._get_action()
+
+class procurement_order(models.Model):
     _inherit = 'procurement.order'
     
+    @api.multi
+    def _run(self,procurement):
+        if procurement.sale_line_id and procurement.sale_line_id.production_id:
+            new_production = procurement.sale_line_id.production_id.copy()
+            
+            sequence_obj = self.env['ir.sequence']
+            vals = {'name':sequence_obj.get('mrp.production'),
+                    'origin':new_production.origin + "/" + procurement.sale_line_id.production_id.name,
+                    'product_qty':procurement.sale_line_id.product_qty,
+                    }
+            new_production.write(vals)
+            res = {}
+            res[procurement.id] = new_production
+            return res
+        else:
+            return super(procurement_order, self)._run( procurement)
     
-    def make_mo(self, cr, uid, ids, context=None):
-        """ Make Manufacturing(production) order from procurement
-        @return: New created Production Orders procurement wise
-        """
-        res = {}
-        production_obj = self.pool.get('mrp.production')
-        procurement_obj = self.pool.get('procurement.order')
-        
-        for procurement in procurement_obj.browse(cr, uid, ids, context=context):
-            if procurement.sale_line_id and procurement.sale_line_id.production_id:
-                produce_id = procurement.sale_line_id.production_id
-                self.production_order_exist_note(cr, uid, procurement, context=context)
-                production_obj.signal_workflow(cr, uid, [produce_id], 'button_confirm')
-                res[procurement.id] = produce_id
-            elif self.check_bom_exists(cr, uid, [procurement.id], context=context):
-                #create the MO as SUPERUSER because the current user may not have the rights to do it (mto product launched by a sale for example)
-                vals = self._prepare_mo_vals(cr, uid, procurement, context=context)
-                produce_id = production_obj.create(cr, SUPERUSER_ID, vals, context=dict(context, force_company=procurement.company_id.id))
-                res[procurement.id] = produce_id
-                self.write(cr, uid, [procurement.id], {'production_id': produce_id})
-                self.production_order_create_note(cr, uid, procurement, context=context)
-                production_obj.action_compute(cr, uid, [produce_id], properties=[x.id for x in procurement.property_ids])
-                production_obj.signal_workflow(cr, uid, [produce_id], 'button_confirm')
-            else:
-                res[procurement.id] = False
-                self.message_post(cr, uid, [procurement.id], body=_("No BoM exists for this product!"), context=context)
-        return res
     
-    def production_order_exists_note(self, cr, uid, procurement, context=None):
-        body = _("Manufacturing Order <em>%s</em> Sales Order used for Production.") % (procurement.production_id.name,)
-        self.message_post(cr, uid, [procurement.id], body=body, context=context)

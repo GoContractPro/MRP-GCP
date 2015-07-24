@@ -21,20 +21,20 @@
 ##############################################################################
 
 
-from openerp import models, fields, api
+from openerp import models, fields, api, exceptions , _
 import openerp.addons.decimal_precision as dp
 
-class WizSaleCreateFictious(models.TransientModel):
+class WizSaleCreateFictious(models.Model):
     _name = "wiz.sale.create.fictitious"
 
     date_planned = fields.Datetime(
         string='Scheduled Date', required=True, default=fields.Datetime.now())
     load_on_product = fields.Boolean("Load cost on product")
-    project_id = fields.Many2one("project.project", string="Project")
+    project_id = fields.Many2one("account.analytic.account", string="Contract/ Project")
     production_sale_margin_id = fields.Many2one('production.sale.margin','Mfg Sales Multiplier ')
     sale_order_id = fields.Many2one("sale.order", string= "Sales Order")
     product_id = fields.Many2one("product.product" , string="Product")
-    product_qty = fields.Float('Product Quantity', digits_compute=dp.get_precision('Product Unit of Measure'))
+    product_qtys = fields.One2many('wiz.sale.create.so.line.qty', 'mfg_sale_wiz_id', string='Quantities' )
     product_uom = fields.Many2one('product.uom', 'Product Unit of Measure',  readonly=False)
     product_uos_qty = fields.Float('Product UoS Quantity', readonly=False)
     product_uos = fields.Many2one('product.uom', 'Product UoS', readonly=False)
@@ -56,26 +56,31 @@ class WizSaleCreateFictious(models.TransientModel):
         active_model = self.env.context['active_model']
         production_list = []
         
+        if not self.product_qtys:
+            raise exceptions.Warning(_("Please Specify A Product Quantity"))
+            return
+        
+        if not self.project_id:
+            proj = project_obj.create({'name':self.sale_order_id.name})
+            self.project_id = proj.id
+            self.sale_order_id.write({"project_id":proj.analytic_account_id.id})
+        
         if active_model == 'sale.order':
             
             sale_order = self.env['sale.order'].browse(active_id)
-            sale_line = sale_line_obj.create({'order_id':active_id,
-                                              'product_id':self.product_id.id,
-                                              'name':'mfg quote--' + self.product_id.name,
-                                              'production_sale_margin_id':self.production_sale_margin_id.id})
-            product =  sale_line.product_id
+            
+            
 
-            vals = {'product_id': product.id,
+            vals = {'product_id': self.product_id.id,
                     'product_qty': 1,
                     'date_planned': self.date_planned,
                     'user_id': self._uid,
                     'active': True,
                     'is_sale_quote':True,
-                    'product_qty': self.product_qty,
                     'product_uom' :self.product_uom.id,
                     'bom_id': self.bom_id.id,
                     'routing_id' : self.routing_id.id,
-                    'sale_order_line_id': sale_line.id,
+  #                  'sale_order_line_id': sale_line.id,
                     'sale_order_id': active_id,
                     'origin': sale_order.name
                     
@@ -85,8 +90,20 @@ class WizSaleCreateFictious(models.TransientModel):
             new_production.calculate_production_estimated_cost()
             production_list.append(new_production.id)
             if new_production.project_id and self.project_id.id:
-                new_production.project_id.write({"parent_id":self.project_id.analytic_account_id.id})
-            sale_line.write({'production_id':new_production.id})
+                new_production.project_id.write({"parent_id":self.project_id.id})
+                
+            for qty in self.product_qtys:
+                
+                sale_line = sale_line_obj.create({'order_id':active_id,
+                                              'product_id':self.product_id.id,
+                                              'name':'mfg quote--' + self.product_id.name,
+                                              'production_sale_margin_id':self.production_sale_margin_id.id,
+                                              'product_uom_qty':qty.product_qty,
+                                              'production_id':new_production.id,
+                                              })
+                
+                sale_line.update_sales_line_prices()
+                
             
         if self.load_on_product:
             for production_id in production_list:
@@ -108,7 +125,7 @@ class WizSaleCreateFictious(models.TransientModel):
                 
                 }'''
         
-    def product_id_change(self, cr, uid, ids, product_id, product_qty=0, context=None):
+    def product_id_change(self, cr, uid, ids, product_id, context=None):
         """ Finds UoM of changed product.
         @param product_id: Id of changed product.
         @return: Dictionary of values.
@@ -132,7 +149,7 @@ class WizSaleCreateFictious(models.TransientModel):
         product_uom_id = product.uom_id and product.uom_id.id or False
         result['value'] = {'product_uos_qty': 0, 'product_uos': False, 'product_uom': product_uom_id, 'bom_id': bom_id, 'routing_id': routing_id}
         if product.uos_id.id:
-            result['value']['product_uos_qty'] = product_qty * product.uos_coeff
+#            result['value']['product_uos_qty'] = product_qty * product.uos_coeff
             result['value']['product_uos'] = product.uos_id.id
             self.write(cr, uid, ids,result['value'],context=context)
         return result
@@ -144,14 +161,22 @@ class WizSaleCreateFictious(models.TransientModel):
         res = super(WizSaleCreateFictious, self).default_get(cr, uid, fields, context)    
         if context is None:
             context = {}  
+        
               
         sale_order_obj = self.pool.get('sale.order').browse(cr, uid, context['active_id'], context=context)
               
-        project =  sale_order_obj.main_project_id
-        res['project_id'] = project.id
+        analytic_account =  sale_order_obj.project_id.id
+        res['project_id'] = analytic_account
         res['sale_order_id'] = context['active_id']
-        res['product_qty'] = 1.0
+        
         return res
+    
+class WizSaleCreateSOLineQty(models.Model):
+        
+    _name = 'wiz.sale.create.so.line.qty'
+        
+    product_qty = fields.Float('Product Quantity', digits_compute=dp.get_precision('Product Unit of Measure'))
+    mfg_sale_wiz_id = fields.Many2one('wiz.sale.create.fictitious', string = 'Sale MFG Wizard')
     
     
 

@@ -34,7 +34,10 @@
     'depends': ['sale','mrp','mrp_production_project_estimated_cost',],
     'init_xml': [],
     'data': [
-        "views/view.xml",
+        "views/analytic_account_view.xml",
+        "views/production_order_view.xml",
+        "wizard/wizard_view.xml",
+        "views/sale_order_view.xml",
         "data/prod_sale_margin_data.xml",
         "data/sale_mrp_production_sequence.xml"
         ],

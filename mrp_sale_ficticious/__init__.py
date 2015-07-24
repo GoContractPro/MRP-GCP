@@ -21,6 +21,6 @@
 
 import mrp_production
 import sale_order
-#import sale_order_line
 import wizard
 import procurement
+import account_analytic_line
