@@ -286,7 +286,7 @@ class sale_order_line(models.Model):
     @api.multi
     def get_production_sale_line_price(self):
         
-#        self.calculate_production_estimated_cost()
+        self.calculate_production_estimated_cost()
      
         analytic_line_obj = self.env['account.analytic.line']
         analytic_lines = analytic_line_obj.search([('sale_line_id','=',self.id)])
@@ -355,19 +355,17 @@ class sale_order_line(models.Model):
             uom=False, qty_uos=0, uos=False, name='', partner_id=False,
             lang=False, update_tax=True, date_order=False, packaging=False, fiscal_position=False, flag=False):
         
+        res = super(sale_order_line, self).product_id_change(pricelist, product, qty=qty,
+            uom=uom, qty_uos=qty_uos, uos=uos, name=name, partner_id=partner_id,
+            lang=lang, update_tax=update_tax, date_order=date_order, packaging=packaging, fiscal_position=fiscal_position, flag=flag)
+        
         if self.production_id:
-            res = {'value': {}}
+            
             prices = self.get_production_sale_line_price()
             res['value']['purchase_price'] = prices.get('purchase_price',0.0)
             res['value']['production_avg_cost'] = prices.get('production_avg_cost',0.0)
             res['value']['price_unit'] = prices.get('price_unit',0.0)
-        
-        else:
-            res = super(sale_order_line, self).product_id_change(pricelist, product, qty=qty,
-            uom=uom, qty_uos=qty_uos, uos=uos, name=name, partner_id=partner_id,
-            lang=lang, update_tax=update_tax, date_order=date_order, packaging=packaging, fiscal_position=fiscal_position, flag=flag)
-
-            
+          
         return res
             
 
