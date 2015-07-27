@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<openerp>
+    <data>
+ 
+        <record id="sale_form_view_mfg_quote_estimatedcost" model="ir.ui.view">
+            <field name="name">sale.form.view.mfg.quote.estimatedcost</field>
+            <field name="model">sale.order</field>
+            <field name="inherit_id" ref="sale.view_order_form"/>
+            <field name="arch" type="xml">
+                 <field name="price_unit" position="after">
+	                 <group>
+							<field name="production_id" readonly='1'/>
+							<field name="production_avg_cost"/>
+							<field name="production_sale_margin_id" on_change="onchange_production_sale_margin(production_sale_margin_id)"/>
+	                 </group>
+                 </field>
+                 
+                <xpath expr="//field[@name='order_line']/tree//field[@name='price_subtotal']" position="after">
+                    <field name="production_id" readonly="1"/>
+                    <button name="action_view_mos" 
+	                    string="View MFG" 
+	                    class="oe_inline oe_stat_button" 
+	                    type="object" icon="STOCK_EDIT" 
+	                    attrs="{'invisible':[('production_id','=',False)]}">
+                    </button>
+                    <button name="action_show_estimated_costs" 
+	                    string="Costs analysis" class="oe_inline oe_stat_button" 
+	                    type="object" 
+	                    icon="STOCK_INFO" 
+	                    attrs="{'invisible':[('production_id','=',False)]}">
+                    </button>
+                    <field name="is_approved"/>
+                    <button name="action_approve" 
+	                    string="Approve Line" 
+	                    class="oe_inline oe_stat_button" 
+	                    type="object" icon="STOCK_APPLY" 
+	                    attrs="{'invisible':[('production_id','=',False)]}">
+                    </button>
+                </xpath>
+                 
+                 <field name="order_line" position='before'>
+                   	<button name="create_mfg_quote" 
+                   		string="Create MFG Quote" 
+                   		states="draft,sent,progress,manual" 
+                   		type="object" 
+                   		class="oe_highlight" />   			
+                 </field>
+                 
+                 <field name="product_id" position="attributes">
+                 	<attribute name="readonly">[('production_id','=',True)] </attribute>
+                 </field>
+                 
+  <!--                <xpath expr="//field[@name='order_line']/form//field[@name='product_id']" position="replace">
+                       <field name="product_id"
+                       context="{'partner_id':parent.partner_id, 'quantity':product_uom_qty, 'pricelist':parent.pricelist_id, 'uom':product_uom}"
+                       groups="base.group_user"
+                       on_change="product_id_change_sale_mfg(parent.pricelist_id,product_id,product_uom_qty,False,product_uos_qty,False,name,parent.partner_id, False, True, parent.date_order, product_packaging, parent.fiscal_position, False, parent.warehouse_id, production_id, context)"/>
+                   </xpath>
+                   <xpath expr="//field[@name='order_line']/tree//field[@name='product_uom_qty']" position="replace">
+                       <field context="{'partner_id':parent.partner_id, 'quantity':product_uom_qty, 'pricelist':parent.pricelist_id, 'uom':product_uom}"
+                             name="product_uom_qty" 
+                       on_change="product_id_change_sale_mfg(parent.pricelist_id,product_id,product_uom_qty,product_uom,product_uos_qty,False,name,parent.partner_id, False, False, parent.date_order, product_packaging, parent.fiscal_position, True, parent.warehouse_id, production_id, context)"/>
+                   </xpath>
+                   <xpath expr="//field[@name='order_line']/form//field[@name='product_uos_qty']" position="replace">
+                       <field context="{'partner_id':parent.partner_id, 'quantity':product_uos_qty, 'pricelist':parent.pricelist_id, 'uom':product_uom}"
+                             name="product_uos_qty" class="oe_inline"
+                       on_change="product_id_change_sale_mfg(parent.pricelist_id,product_id,product_uom_qty,product_uom,product_uos_qty,product_uos,name,parent.partner_id, False, False, parent.date_order, product_packaging, parent.fiscal_position, True, parent.warehouse_id, production_id, context)"/>
+                   </xpath>
+                   
+  -->  
+
+            </field>
+        </record>
+             
+       
+    </data>
+</openerp>

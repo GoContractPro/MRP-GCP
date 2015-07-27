@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<openerp>
+    <data>
+    <record id="wiz_sale_create_fictitious_of_view" model="ir.ui.view">
+            <field name="name">wiz.sale.create.fictitious.of.view</field>
+            <field name="model">wiz.sale.create.fictitious</field>
+            <field name="arch" type="xml">
+                <form string="Create MFG Quote">
+                	
+                	<group col="8" colspan='4'>
+                		<group>
+                 			<field name="product_id"  domain="[('bom_ids','!=',False),('bom_ids.type','!=','phantom')]" 
+                 					on_change="product_id_change(product_id)" 
+                 					class="oe_inline" context='{"default_type": "product"}'/>
+                        	<field name="product_uom"  invisible='0' readonly='0' />
+                        	<field name="bom_id"/>
+	                        <field name="routing_id" />
+                        </group>
+
+                        <group>
+							<field name="date_planned" />
+	                        <field name="load_on_product" invisible='1' />
+	                        <field name="production_sale_margin_id" required='1'/>
+	                        <field name="project_id" />
+                        </group>
+                   	</group>
+                   	<group col="8" >
+                   	
+                   		<field name="sale_order_id" readonly='1' invisible='0'/>
+                    	
+                      
+                        	 
+	                    <field name="product_qtys" string="Order Line Quantities" class="oe_inline" widget="many2one_list" colspan='1' >
+	                        	<tree string="Sales Order Line Quantities" editable="bottom">
+	                        		<field  name ="product_qty"  nolabel='1'  />
+	                        	</tree>
+	                    </field>
+
+
+                    </group>
+                    <footer>
+                        <button name="do_create_fictitious_of_sale" type="object" string="Create MFG Quote" class="oe_highlight" />
+                        or
+                        <button string="Cancel" class="oe_link" special="cancel" />
+                    </footer>
+                </form>
+            </field>
+        </record>   
+        
+         <record id="wiz_sale_quantities_fictitious_view" model="ir.ui.view">
+            <field name="name">wiz.sale.quantities.fictitious.view</field>
+            <field name="model">wiz.sale.create.so.line.qty</field>
+            <field name="arch" type="xml">
+                <form string="MFG Quote Quantities">  
+                	<group>
+                		<field name='product_qty'/>
+                	</group>
+                </form>
+            </field>
+         </record>
+         
+        <record id="wiz_sale_quantities_fictitious_view" model="ir.ui.view">
+            <field name="name">wiz.sale.quantities.fictitious.view</field>
+            <field name="model">wiz.sale.create.so.line.qty</field>
+            <field name="arch" type="xml">
+                <tree string="MFG Quote Quantities">  
+                	<field name='product_qty'/>
+                </tree>
+            </field>
+         </record>
+                
+       
+    </data>
+</openerp>

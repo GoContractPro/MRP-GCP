@@ -94,6 +94,8 @@ class WizSaleCreateFictious(models.Model):
                 
             for qty in self.product_qtys:
                 
+                
+                
                 sale_line = sale_line_obj.create({'order_id':active_id,
                                               'product_id':self.product_id.id,
                                               'name':'mfg quote--' + self.product_id.name,
@@ -102,8 +104,11 @@ class WizSaleCreateFictious(models.Model):
                                               'production_id':new_production.id,
                                               })
                 
-                sale_line.update_sales_line_prices()
+                prices = sale_line.get_production_sale_line_price()
                 
+                sale_line.write({'price_unit':prices.get('price_unit',0.0),
+                                'production_avg_cost':prices.get('production_avg_cost',0.0),
+                                'purchase_price':prices.get('purchase_price',0.0),})
             
         if self.load_on_product:
             for production_id in production_list:

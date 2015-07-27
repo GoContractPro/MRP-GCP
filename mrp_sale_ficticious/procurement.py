@@ -32,7 +32,7 @@ class procurement_order(models.Model):
     _inherit = 'procurement.order'
     
     @api.multi
-    def _run(self,procurement):
+    def _run(self,procurement=None):
         if procurement.sale_line_id and procurement.sale_line_id.production_id:
             new_production = procurement.sale_line_id.production_id.copy()
             
