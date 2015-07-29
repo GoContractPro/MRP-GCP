@@ -15,7 +15,8 @@
 	                 </group>
                  </field>
                  
-                <xpath expr="//field[@name='order_line']/tree//field[@name='price_subtotal']" position="after">
+                 
+                <xpath expr="//field[@name='order_line']/tree/field[@name='price_subtotal']" position="after">
                     <field name="production_id" readonly="1"/>
                     <button name="action_view_mos" 
 	                    string="View MFG" 
@@ -46,28 +47,54 @@
                    		class="oe_highlight" />   			
                  </field>
                  
-                 <field name="product_id" position="attributes">
-                 	<attribute name="readonly">[('production_id','=',True)] </attribute>
-                 </field>
-                 
-  <!--                <xpath expr="//field[@name='order_line']/form//field[@name='product_id']" position="replace">
+		      		<xpath expr="//field[@name='order_line']/form//field[@name='product_id']" position="replace">
                        <field name="product_id"
                        context="{'partner_id':parent.partner_id, 'quantity':product_uom_qty, 'pricelist':parent.pricelist_id, 'uom':product_uom}"
                        groups="base.group_user"
-                       on_change="product_id_change_sale_mfg(parent.pricelist_id,product_id,product_uom_qty,False,product_uos_qty,False,name,parent.partner_id, False, True, parent.date_order, product_packaging, parent.fiscal_position, False, parent.warehouse_id, production_id, context)"/>
+                       on_change="product_id_change_sale_mfg(parent.pricelist_id,product_id,product_uom_qty,False,product_uos_qty,False,
+                       name,parent.partner_id, False, True, parent.date_order, product_packaging, parent.fiscal_position, False, 
+                       parent.warehouse_id, production_id)"
+                       readonly="[('production_id','=',True)]"/>
+                   </xpath>
+                   <xpath expr="//field[@name='order_line']/tree//field[@name='product_id']" position="replace">
+                       <field name="product_id"
+                       context="{'partner_id':parent.partner_id, 'quantity':product_uom_qty, 'pricelist':parent.pricelist_id, 'uom':product_uom}"
+                       groups="base.group_user"
+                       on_change="product_id_change_sale_mfg(parent.pricelist_id,product_id,product_uom_qty,False,product_uos_qty,False,
+                       name,parent.partner_id, False, True, parent.date_order, product_packaging, parent.fiscal_position, False, 
+                       parent.warehouse_id, production_id)"
+                       readonly="[('production_id','=',True)]"/>
+                   </xpath>
+                   
+                   
+
+                   
+                   <xpath expr="//field[@name='order_line']/form//field[@name='product_uom_qty']" position="replace">
+                       <field context="{'partner_id':parent.partner_id, 'quantity':product_uom_qty, 'pricelist':parent.pricelist_id, 'uom':product_uom}"
+                             name="product_uom_qty" 
+                       on_change="product_id_change_sale_mfg(parent.pricelist_id,product_id,product_uom_qty,
+                       product_uom,product_uos_qty,False,name,parent.partner_id, False, False, parent.date_order, product_packaging,
+                       parent.fiscal_position, True, parent.warehouse_id,production_id)"/>
                    </xpath>
                    <xpath expr="//field[@name='order_line']/tree//field[@name='product_uom_qty']" position="replace">
                        <field context="{'partner_id':parent.partner_id, 'quantity':product_uom_qty, 'pricelist':parent.pricelist_id, 'uom':product_uom}"
                              name="product_uom_qty" 
-                       on_change="product_id_change_sale_mfg(parent.pricelist_id,product_id,product_uom_qty,product_uom,product_uos_qty,False,name,parent.partner_id, False, False, parent.date_order, product_packaging, parent.fiscal_position, True, parent.warehouse_id, production_id, context)"/>
+                       on_change="product_id_change_sale_mfg(parent.pricelist_id,product_id,product_uom_qty,
+                       product_uom,product_uos_qty,False,name,parent.partner_id, False, False, parent.date_order, product_packaging, 
+                       parent.fiscal_position, True, parent.warehouse_id, production_id)"/>
                    </xpath>
-                   <xpath expr="//field[@name='order_line']/form//field[@name='product_uos_qty']" position="replace">
-                       <field context="{'partner_id':parent.partner_id, 'quantity':product_uos_qty, 'pricelist':parent.pricelist_id, 'uom':product_uom}"
-                             name="product_uos_qty" class="oe_inline"
-                       on_change="product_id_change_sale_mfg(parent.pricelist_id,product_id,product_uom_qty,product_uom,product_uos_qty,product_uos,name,parent.partner_id, False, False, parent.date_order, product_packaging, parent.fiscal_position, True, parent.warehouse_id, production_id, context)"/>
-                   </xpath>
-                   
-  -->  
+
+                   <xpath expr="//field[@name='order_line']/form//field[@name='product_uom']" position="replace">
+    					<field name="product_uom" groups="product.group_uom" class="oe_inline oe_no_button"
+							on_change="product_uom_change_mfg(parent.pricelist_id,product_id,product_uom_qty,product_uom,product_uos_qty,product_uos,
+							name,parent.partner_id, False, False, parent.date_order)"/>
+				   </xpath>
+				   <xpath expr="//field[@name='order_line']/tree//field[@name='product_uom']" position="replace">
+    					<field name="product_uom" groups="product.group_uom" class="oe_inline oe_no_button"
+							on_change="product_uom_change_mfg(parent.pricelist_id,product_id,product_uom_qty,product_uom,product_uos_qty,product_uos,
+							name,parent.partner_id, False, False, parent.date_order)"/>
+				   </xpath>
+                                            
 
             </field>
         </record>

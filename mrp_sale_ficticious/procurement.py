@@ -19,7 +19,7 @@
 #
 ##############################################################################
 
-from openerp import models, fields, api
+from openerp import models, fields, api, _
 
 class procurement_rule(models.Model):
     _inherit = 'procurement.rule'
@@ -31,21 +31,26 @@ class procurement_rule(models.Model):
 class procurement_order(models.Model):
     _inherit = 'procurement.order'
     
-    @api.multi
-    def _run(self,procurement=None):
+    
+    def _run(self,cr,uid,procurement, context=None):
+        
         if procurement.sale_line_id and procurement.sale_line_id.production_id:
             new_production = procurement.sale_line_id.production_id.copy()
-            
-            sequence_obj = self.env['ir.sequence']
+            origin = procurement.sale_line_id.production_id.origin or ''
+            quantity = procurement.sale_line_id.product_uom_qty or 0.0
+            sequence_obj = procurement.env['ir.sequence']
             vals = {'name':sequence_obj.get('mrp.production'),
-                    'origin':new_production.origin + "/" + procurement.sale_line_id.production_id.name,
-                    'product_qty':procurement.sale_line_id.product_qty,
+                    'origin':(origin) + "/" + (procurement.sale_line_id.production_id.name or ''),
+                    'product_qty':quantity,
                     }
             new_production.write(vals)
             res = {}
             res[procurement.id] = new_production
             return res
         else:
-            return super(procurement_order, self)._run( procurement)
-    
+            return super(procurement_order, self)._run(cr, uid, procurement, context=context)
+
+
+            
+        
     
