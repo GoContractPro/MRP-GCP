@@ -26,7 +26,7 @@ class MrpProduction(models.Model):
     _inherit = 'mrp.production'
     
     sale_order_line_id = fields.Many2one("sale.order.line", string= "Sales Line", ondelete='cascade')
-    sale_order_id = fields.Many2one("sale.order", string= "Sales Line")
+    sale_order_id = fields.Many2one("sale.order", string= "Sale Order ")
     sale_project_id =  fields.Many2one("project.project", string="Sales Project")
     is_sale_quote = fields.Boolean("Confirmed Quote")
     product_lines = fields.One2many('mrp.production.product.line', 'production_id', 'Scheduled goods',
@@ -43,7 +43,12 @@ class MrpProduction(models.Model):
             'mrp_production_project_estimated_cost.estimated_cost_list_view')
         search_view = self.env.ref('mrp_project_link.account_analytic_line'
                                    '_mrp_search_view')
-        analytic_line_list = analytic_line_obj.search(
+        if self.sale_order_line_id:
+            analytic_line_list = analytic_line_obj.search(
+            [('sale_order_line_id', '=', self.sale_order_line_id.id),
+             ('task_id', '=', False)])        
+        else:
+            analytic_line_list = analytic_line_obj.search(
             [('mrp_production_id', '=', self.id),
              ('task_id', '=', False)])
         self = self.with_context(
@@ -62,11 +67,38 @@ class MrpProduction(models.Model):
             ','.join(map(str, analytic_line_list.ids)) + "])]",
             'context': self.env.context
             }
+        
+    @api.multi
+    def create_production_estimated_cost(self):
+        production = self
+        if production.sale_order_line_id:
+            self.create_sale_analytic_production_estimated_cost(sale_order_line = production.sale_order_line_id)
+        else:
+            super(MrpProduction, self).create_production_estimated_cost()
+            
+
 
     @api.multi                
-    def _prepare_sale_cost_analytic_line(self, journal, name, sale_line = None , product = None,
+    def _prepare_analytic_line(self, journal, name, production = None , product = None,
+                                    general_account=None, workorder=None,
+                                    qty=1, amount=0, estim_std=0, estim_avg=0 ):
+        
+        
+        res = super(MrpProduction, self)._prepare_analytic_line(journal, name, production = production , product = product,
+                                    general_account=None, workorder=None,
+                                    qty= qty, amount=amount, estim_std=estim_std, estim_avg=estim_avg)
+        
+        if production.sale_order_line:
+            
+            res['sale_order_line_id'] = production.sale_order_line_id.id or False,
+
+        return res
+    
+    @api.multi                
+    def _prepare_sale_cost_analytic_line(self, journal, name, sale_order_line, product,
                                     general_account=None, workorder=None,
                                     qty=1, amount=0, estim_std=0, estim_avg=0):
+        
         analytic_line_obj = self.env['account.analytic.line']
         property_obj = self.env['ir.property']
         if not general_account:
@@ -75,15 +107,15 @@ class MrpProduction(models.Model):
                                or property_obj.get(
                                    'property_account_expense_categ',
                                    'product.category'))
-        if not sale_line.order_id.project_id:
+        if not sale_order_line.order_id.project_id:
             raise exceptions.Warning(
                 _('You must define one Project for this Sale Order Quote: %s') %
-                (self.order_id.name))
+                (self.sale_order_id.name))
         vals = {
             'name': name,
-            'sale_line_id': sale_line and sale_line.id or False,
+            'sale_order_line_id': sale_order_line and sale_order_line.id or False,
             'workorder': workorder and workorder.id or False,
-            'account_id': sale_line.order_id.project_id.id,#Analytic Account ID
+            'account_id': sale_order_line.order_id.project_id.id,#Analytic Account ID
             'journal_id': journal.id,
             'user_id': self.env.uid,
             'date': analytic_line_obj._get_default_date(),
@@ -98,18 +130,18 @@ class MrpProduction(models.Model):
         return vals
 
     @api.multi
-    def create_sale_analytic_production_estimated_cost(self, sale_line=None):
+    def create_sale_analytic_production_estimated_cost(self, sale_order_line=None):
+        
         analytic_line_obj = self.env['account.analytic.line']
- #       for sale_line in self:
-        cond = [('sale_line_id', '=', sale_line.id)]
+        cond = [('sale_order_line_id', '=', sale_order_line.id)]
         analytic_line_obj.search(cond).unlink()
         journal = self.env.ref('mrp_production_project_estimated_cost.'
                                  'analytic_journal_materials', False)
 
         production = self
-        if not sale_line:
+        if not sale_order_line:
             raise exceptions.Warning(
-                    _("Sale Oreder line required."))
+                    _("Sale Order Line Required."))
         
         
         for line in production.product_lines:
@@ -118,9 +150,9 @@ class MrpProduction(models.Model):
                     _("One consume line has no product assigned."))
             name = _('%s-%s' % (production.name, line.work_order.name or ''))
             product = line.product_id
-            qty = line.product_qty * sale_line.product_uom_qty
+            qty = line.product_qty * sale_order_line.product_uom_qty
             vals = production._prepare_sale_cost_analytic_line(
-                journal, name, sale_line, product, workorder=line.work_order,
+                journal, name, sale_order_line = sale_order_line, product = product, workorder=line.work_order,
                 qty=qty, estim_std=-(qty * product.manual_standard_cost),
                 estim_avg=-(qty * product.cost_price))
             analytic_line_obj.create(vals)
@@ -138,7 +170,7 @@ class MrpProduction(models.Model):
                 amount = product.cost_price * wc.time_start
                 qty = wc.time_start
                 vals = production._prepare_sale_cost_analytic_line(
-                    journal, name, sale_line, product, workorder=line,
+                    journal, name, sale_order_line = sale_order_line, product = product, workorder=line,
                     qty=qty, amount=-amount,
                     estim_std=-(qty * product.manual_standard_cost),
                     estim_avg=-(amount))
@@ -150,7 +182,7 @@ class MrpProduction(models.Model):
                 amount = product.cost_price * wc.time_stop
                 qty = wc.time_stop
                 vals = production._prepare_sale_cost_analytic_line(
-                    journal, name, sale_line, product, workorder=line,
+                    journal, name, sale_order_line = sale_order_line, product = product, workorder=line,
                     qty=qty, amount=-amount,
                     estim_std=-(qty * product.manual_standard_cost),
                     estim_avg=-(amount))
@@ -164,9 +196,9 @@ class MrpProduction(models.Model):
                         (production.name, line.routing_wc_line.operation.code,
                          line.workcenter_id.name))
                 product = line.workcenter_id.product_id
-                estim_cost = -(line.workcenter_id.costs_cycle * line.cycle) *  sale_line.product_uom_qty
+                estim_cost = -(line.workcenter_id.costs_cycle * line.cycle) *  sale_order_line.product_uom_qty
                 vals = production._prepare_sale_cost_analytic_line(
-                    journal, name, sale_line, product, workorder=line,
+                    journal, name, sale_order_line = sale_order_line, product = product, workorder=line,
                     qty=line.cycle, estim_std=estim_cost,
                     estim_avg=estim_cost)
                 analytic_line_obj.create(vals)
@@ -178,14 +210,14 @@ class MrpProduction(models.Model):
                 name = (_('%s-%s-H-%s') %
                         (production.name, line.routing_wc_line.operation.code,
                          line.workcenter_id.name))
-                hour = line.hour *  sale_line.product_uom_qty
+                hour = line.hour *  sale_order_line.product_uom_qty
                 if wc.time_stop and not line.workcenter_id.post_op_product:
                     hour += wc.time_stop
                 if wc.time_start and not line.workcenter_id.pre_op_product:
                     hour += wc.time_start
                 estim_cost = -(hour * line.workcenter_id.costs_hour)
                 vals = production._prepare_sale_cost_analytic_line(
-                    journal, name, sale_line, line.workcenter_id.product_id,
+                    journal, name, sale_order_line = sale_order_line, product = line.workcenter_id.product_id,
                     workorder=line, qty=hour,
                     estim_std=estim_cost, estim_avg=estim_cost)
                 analytic_line_obj.create(vals)
@@ -200,11 +232,11 @@ class MrpProduction(models.Model):
                 name = (_('%s-%s-%s') %
                         (production.name, line.routing_wc_line.operation.code,
                          line.workcenter_id.product_id.name))
-                estim_cost = -(wc.op_number * wc.op_avg_cost * line.hour) * sale_line.product_uom_qty
-                qty = line.hour * wc.op_number * sale_line.product_uom_qty
+                estim_cost = -(wc.op_number * wc.op_avg_cost * line.hour) * sale_order_line.product_uom_qty
+                qty = line.hour * wc.op_number * sale_order_line.product_uom_qty
                 
                 vals = production._prepare_sale_cost_analytic_line(
-                    journal, name, sale_line, line.workcenter_id.product_id,
+                    journal, name, sale_order_line = sale_order_line, product = line.workcenter_id.product_id,
                     workorder=line, qty=qty, estim_std=estim_cost,
                     estim_avg=estim_cost)
                 analytic_line_obj.create(vals)
@@ -214,7 +246,7 @@ class MrpProduction(models.Model):
     @api.model
     def create(self, values):
         sequence_obj = self.env['ir.sequence']
-        if values.get('is_sale_quote', True):
+        if values.get('is_sale_quote', False):
             values['name'] = sequence_obj.get('sale.mrp.production')
         else:
             if values.get('active', True):
@@ -230,29 +262,23 @@ class MrpProduction(models.Model):
     @api.one
     def write(self, vals, update=True, mini=True):
         
-        if 'product_qty' in vals and not vals.get('product_qty'):
+        cond = [('production_id','=',self.id)]
+        so_lines_to_update = self.env['sale.order.line'].search(cond)
         
-            self.calculate_production_estimated_cost()
-            self.env.cr.commit()
+        for line in so_lines_to_update:
             
-        return super(MrpProduction, self).write(vals,mini=False)
+            for line.state in ['draft']:
+                line.update_mfg_sale_line_price()
+            
+        return super(MrpProduction, self).write(vals,update=update,mini=mini)
 
     @api.multi
     def copy(self,default=None):
         
         default = {} if default is None else default.copy()
-            
-        sequence_obj = self.env['ir.sequence']
-        name = sequence_obj.get('mrp.production')
-        default['name'] = name
         
-        origin = self.origin or ''       
-        origin_name = self.name or ''
-        default['origin'] =_(origin + "[" + origin_name + "]")
-        default['is_sale_quote'] = False
-        
-
-                    
+        default['origin'] = (self.origin or '') + "[Copy-" + (self.name or '') + "]"         
         return super(MrpProduction, self).copy( default)
             
-            
+
+

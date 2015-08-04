@@ -1,5 +1,8 @@
+
 # -*- encoding: utf-8 -*-
 ##############################################################################
+#
+#    Daniel Campos (danielcampos@avanzosc.es) Date: 15/10/2014
 #
 #    This program is free software: you can redistribute it and/or modify
 #    it under the terms of the GNU Affero General Public License as published
@@ -16,12 +19,15 @@
 #
 ##############################################################################
 
-from openerp import models, fields
+from openerp import models
 
 
-class AccountAnalyticLine(models.Model):
+class MrpProductionProductLine(models.Model):
+    _inherit = 'mrp.production.product.line'
 
-    _inherit = 'account.analytic.line'
-
-
-    sale_order_line_id = fields.Many2one('sale.order.line', 'Sales Line')
+    def onchange_product(self, cr, uid, ids, product_id, context=None):
+        if product_id:
+            product_obj = self.pool['product.product']
+            product = product_obj.browse(cr, uid, product_id, context)
+            return {'value': {'product_uom': product.uom_id.id,
+                              'name':product.name}}

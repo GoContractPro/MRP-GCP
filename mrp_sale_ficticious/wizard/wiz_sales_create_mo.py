@@ -30,7 +30,7 @@ class WizSaleCreateFictious(models.Model):
     date_planned = fields.Datetime(
         string='Scheduled Date', required=True, default=fields.Datetime.now())
     load_on_product = fields.Boolean("Load cost on product")
-    project_id = fields.Many2one("account.analytic.account", string="Contract/ Project")
+    project_id = fields.Many2one("project.project", string="Project")
     production_sale_margin_id = fields.Many2one('production.sale.margin','Mfg Sales Multiplier ')
     sale_order_id = fields.Many2one("sale.order", string= "Sales Order")
     product_id = fields.Many2one("product.product" , string="Product")
@@ -47,30 +47,35 @@ class WizSaleCreateFictious(models.Model):
     @api.multi
     def do_create_fictitious_of_sale(self):
         production_obj = self.env['mrp.production']
-        product_obj = self.env['product.product']
         project_obj = self.env['project.project']
         sale_line_obj = self.env['sale.order.line']
         
         self.ensure_one()
         active_id = self.env.context['active_id']
         active_model = self.env.context['active_model']
-        production_list = []
         
         if not self.product_qtys:
             raise exceptions.Warning(_("Please Specify A Product Quantity"))
             return
         
-        if not self.project_id:
-            proj = project_obj.create({'name':self.sale_order_id.name})
-            self.project_id = proj.id
-            self.sale_order_id.write({"project_id":proj.analytic_account_id.id})
-        
-        if active_model == 'sale.order':
-            
-            sale_order = self.env['sale.order'].browse(active_id)
-            
-            
 
+        
+        if active_model == 'sale.order':      
+            
+            if not self.project_id and not self.sale_order_id.main_project_id:
+                
+                project_obj = project_obj.create({'name':self.sale_order_id.name})
+                self.project_id = project_obj.id
+                self.sale_order_id.write({"project_id":project_obj.analytic_account_id.id,
+                                      "main_project_id":project_obj.id})
+            elif self.project_id and not self.sale_order_id.main_project_id:
+                
+                self.sale_order_id.write({"project_id":project_obj.analytic_account_id.id,
+                                      "main_project_id":project_obj.id})
+                
+            elif self.project_id != self.sale_order_id.main_project_id:
+                raise exceptions.Warning(_("You have set Project different than the Sales Order Project"))
+        
             vals = {'product_id': self.product_id.id,
                     'product_qty': 1,
                     'date_planned': self.date_planned,
@@ -79,22 +84,18 @@ class WizSaleCreateFictious(models.Model):
                     'is_sale_quote':True,
                     'product_uom' :self.product_uom.id,
                     'bom_id': self.bom_id.id,
-                    'routing_id' : self.routing_id.id,
-  #                  'sale_order_line_id': sale_line.id,
+                    'routing_id' : self.routing_id.id,                  
                     'sale_order_id': active_id,
-                    'origin': sale_order.name
-                    
                     }
+            
             new_production = production_obj.create(vals)
             new_production.action_compute()
             new_production.calculate_production_estimated_cost()
-            production_list.append(new_production.id)
+            
             if new_production.project_id and self.project_id.id:
                 new_production.project_id.write({"parent_id":self.project_id.id})
                 
-            for qty in self.product_qtys:
-                
-                
+            for qty in self.product_qtys:              
                 
                 sale_line = sale_line_obj.create({'order_id':active_id,
                                               'product_id':self.product_id.id,
@@ -106,29 +107,20 @@ class WizSaleCreateFictious(models.Model):
                 
                 prices = sale_line.get_production_sale_line_price()
                 
-                sale_line.write({'price_unit':prices.get('price_unit',0.0),
-                                'production_avg_cost':prices.get('production_avg_cost',0.0),
-                                'purchase_price':prices.get('purchase_price',0.0),})
-            
-        if self.load_on_product:
-            for production_id in production_list:
-                try:
-                    production = production_obj.browse(production_id)
-                    production.calculate_production_estimated_cost()
-                    production.load_product_std_price()
-                except:
-                    continue
-        return{}
-        '''return {'view_type': 'form',
-                'view_mode': 'form, tree',
-                'res_model': 'mrp.production',
-                'type': 'ir.actions.act_window',
-                'target':'new',
-                'domain': "[('id','in'," + str(production_list) + "), "
-                "('active','=',False)]",
-                'res_id':  production_list[0],
+                result = sale_line.product_id_change_sale_mfg(sale_line.order_id.pricelist_id.id, sale_line.product_id.id,sale_line.product_uom_qty,
+                                            uom=sale_line.product_uom.id, qty_uos =  sale_line.product_uos_qty, uos=sale_line.product_uos.id, 
+                                            name=sale_line.name, partner_id=sale_line.order_id.partner_id.id, lang=False, update_tax=True, 
+                                            date_order=sale_line.order_id.date_order, packaging=False, fiscal_position=sale_line.order_id.fiscal_position.id, 
+                                            flag=False,production_id=sale_line.production_id.id)
+                vals = result['value']
                 
-                }'''
+                vals['price_unit']= prices.get('price_unit',0.0)
+                vals['production_avg_cost'] = prices.get('production_avg_cost',0.0)
+                vals['purchase_price'] = prices.get('purchase_price',0.0)            
+                
+                sale_line.write(vals)
+            
+        return{}
         
     def product_id_change(self, cr, uid, ids, product_id, context=None):
         """ Finds UoM of changed product.
@@ -170,8 +162,8 @@ class WizSaleCreateFictious(models.Model):
               
         sale_order_obj = self.pool.get('sale.order').browse(cr, uid, context['active_id'], context=context)
               
-        analytic_account =  sale_order_obj.project_id.id
-        res['project_id'] = analytic_account
+        project =  sale_order_obj.main_project_id.id
+        res['project_id'] = project
         res['sale_order_id'] = context['active_id']
         
         return res

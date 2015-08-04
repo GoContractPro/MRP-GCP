@@ -31,7 +31,8 @@
     """,
     'author': 'NovaPoint Group Inc, Stephen Levenhagen',
     'website': 'www.novapointgroup.com',
-    'depends': ['sale','sale_stock','mrp','mrp_production_project_estimated_cost'],
+    'depends': ['sale','sale_stock','mrp_operations','mrp_production_project_estimated_cost',
+                'mrp_production_editable_scheduled_products','sale_mrp_project_link'],
     'init_xml': [],
     'data': [
         "views/analytic_account_view.xml",

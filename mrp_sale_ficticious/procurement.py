@@ -19,32 +19,36 @@
 #
 ##############################################################################
 
-from openerp import models, fields, api, _
+from openerp import models, fields, api, exceptions, _
 
-class procurement_rule(models.Model):
-    _inherit = 'procurement.rule'
 
-    @api.multi
-    def _get_action(self):
-        return [('sale_manufacture', _('Sales MFG Quoted'))] + super(procurement_rule, self)._get_action()
 
 class procurement_order(models.Model):
     _inherit = 'procurement.order'
     
     
-    def _run(self,cr,uid,procurement, context=None):
+    def _run(self, cr, uid, procurement, context=None):
         
+
         if procurement.sale_line_id and procurement.sale_line_id.production_id:
-            new_production = procurement.sale_line_id.production_id.copy()
-            origin = procurement.sale_line_id.production_id.origin or ''
-            quantity = procurement.sale_line_id.product_uom_qty or 0.0
-            sequence_obj = procurement.env['ir.sequence']
-            vals = {'name':sequence_obj.get('mrp.production'),
-                    'origin':(origin) + "/" + (procurement.sale_line_id.production_id.name or ''),
-                    'product_qty':quantity,
-                    }
-            new_production.write(vals)
             res = {}
+            production_obj = self.pool.get('mrp.production')
+            defaults = self._prepare_mo_vals(cr, uid, procurement, context=context)
+            defaults['is_sale_quote'] = False,
+            defaults['sale_order_line_id'] = procurement.sale_line_id.id         
+            defaults['sale_order_id'] = procurement.sale_line_id.order_id.id
+            defaults['analytic_account_id'] = procurement.sale_line_id.order_id.project_id.id
+            defaults['project'] = procurement.sale_line_id.order_id.main_project_id.id       
+            
+
+            new_production = procurement.sale_line_id.production_id.copy(defaults)
+            
+            new_production.write({'is_sale_quote':False})
+            procurement.sale_line_id.write({'production_actual_id':new_production.id})
+#            self.write(cr, uid, [procurement.id], {'production_id': new_production.id})
+            self.production_order_create_note(cr, uid, procurement, context=context)
+            production_obj.signal_workflow(cr, uid, [new_production.id], 'button_confirm')
+
             res[procurement.id] = new_production
             return res
         else:

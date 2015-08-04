@@ -1,5 +1,8 @@
+
 # -*- encoding: utf-8 -*-
 ##############################################################################
+#
+#    Daniel Campos (danielcampos@avanzosc.es) Date: 15/10/2014
 #
 #    This program is free software: you can redistribute it and/or modify
 #    it under the terms of the GNU Affero General Public License as published
@@ -16,12 +19,18 @@
 #
 ##############################################################################
 
-from openerp import models, fields
-
-
-class AccountAnalyticLine(models.Model):
-
-    _inherit = 'account.analytic.line'
-
-
-    sale_order_line_id = fields.Many2one('sale.order.line', 'Sales Line')
+{
+    "name": "MRP Editable scheduled products",
+    "version": "1.0",
+    "description": """
+    This module allows to edit production order to add more scheduled products.
+    """,
+    "author": "OdooMRP team,"
+              "AvanzOSC,"
+              "Serv. Tecnol. Avanzados - Pedro M. Baeza",
+    'website': "http://www.odoomrp.com",
+    "depends": ['mrp'],
+    "category": "Manufacturing",
+    "data": ['views/mrp_production_view.xml'],
+    "installable": True
+}

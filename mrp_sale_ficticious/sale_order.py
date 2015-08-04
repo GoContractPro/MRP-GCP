@@ -54,13 +54,14 @@ class sale_order_line(models.Model):
     
 
     
-    production_id = fields.Many2one('mrp.production', 'Manufacturing Order',ondelete='cascade')
+    production_id = fields.Many2one('mrp.production', 'MFG Quote')
+    production_actual_id = fields.Many2one('mrp.production', 'MFG Production order')
 #    production_avg_cost = fields.Float(string="Estimated Cost",
 #                            compute="get_unit_avg_cost", store=True)
-    production_avg_cost = fields.Float('MFG Unit Standard Cost')
+    production_avg_cost = fields.Float('MFG Unit Estimated Cost')
     production_sale_margin_id = fields.Many2one('production.sale.margin','Mfg Sales Multiplier ')
-    analytic_line_ids = fields.One2many(comodel_name="account.analytic.line", inverse_name="sale_line_id",string="Cost Lines")
-    is_approved = fields.Boolean('Is Approved')
+    analytic_line_ids = fields.One2many(comodel_name="account.analytic.line", inverse_name="sale_order_line_id",string="Cost Lines")
+    is_approved = fields.Boolean('Production Approved')
     
     
     _defaults = {
@@ -103,17 +104,28 @@ class sale_order_line(models.Model):
         res = super(sale_order_line,self).button_cancel()
         return res
     
+    
     @api.multi
     def button_confirm(self):
-        res = super(sale_order_line,self).button_confirm()
-#        sale_lines = self.env['sale.order.line'].browse(ids)
         
+        line_delete = []
+        line_confirm = []
+        line_name_delete = []
+        sale_line_obj = self.env['sale.order.line']
         for sale_line in self:
-            if sale_line.production_id:
-                sequence_obj = self.env['ir.sequence']
-                if sale_line.production_id.is_sale_quote:
-                    name = sequence_obj.get('mrp.production')
-                    sale_line.production_id.write({'is_sale_quote':False,'name':name,})
+            if sale_line.production_id and not sale_line.is_approved :
+                line_delete.append(sale_line.id)
+                line_name_delete.append("Line:" + str(sale_line.sequence) + "-" + sale_line.name)
+            else:
+                line_confirm.append(sale_line.id)
+        if line_delete:
+#           self.show_warning('\n'.join(line_name_delete) + "\n" + _("Will Be Removed"))
+            sale_line_obj.browse(line_delete).unlink()
+        
+#        sale_lines = self.env['sale.order.line'].browse(ids)
+        sale_line_obj = sale_line_obj.browse(line_confirm)
+        res = super(sale_order_line,sale_line_obj).button_confirm()
+            
         return  res
     
     
@@ -121,13 +133,13 @@ class sale_order_line(models.Model):
     def get_production_sale_line_price(self):
         
         if self.production_id:
-            self.production_id.create_sale_analytic_production_estimated_cost(sale_line=self)
+            self.production_id.create_sale_analytic_production_estimated_cost(sale_order_line=self)
         else:
             raise exceptions.Warning(
                     _("Sales line has no MFG orders."))
      
         analytic_line_obj = self.env['account.analytic.line']
-        analytic_lines = analytic_line_obj.search([('sale_line_id','=',self.id)])
+        analytic_lines = analytic_line_obj.search([('sale_order_line_id','=',self.id)])
         production_cost = sum([line.estim_avg_cost for line in
                              analytic_lines])
         
@@ -141,12 +153,20 @@ class sale_order_line(models.Model):
             price = 1.0
 
         vals = {'production_avg_cost':unit_avg_cost,
-                                'purchase_price': unit_avg_cost,
-                                'price_unit':price,
-                                 }
+                'purchase_price': unit_avg_cost,
+                'price_unit':price,
+                }
         
         return vals
     
+    @api.multi
+    def update_mfg_sale_line_price(self):
+        
+        if self.production_id:
+            prices = self.get_production_sale_line_price()
+            self.write(prices)
+        return True
+                
     @api.multi
     def action_approve(self):
         
@@ -161,6 +181,8 @@ class sale_order_line(models.Model):
         return res
     
     
+
+    
     @api.multi
     def action_show_estimated_costs(self):
         self.ensure_one()
@@ -170,7 +192,7 @@ class sale_order_line(models.Model):
         search_view = self.env.ref('mrp_project_link.account_analytic_line'
                                    '_mrp_search_view')
         analytic_line_list = analytic_line_obj.search(
-            [('sale_line_id', '=', self.id),
+            [('sale_order_line_id', '=', self.id),
              ('task_id', '=', False)])
         self = self.with_context(
                                  search_default_group_workorder=1,
@@ -189,20 +211,19 @@ class sale_order_line(models.Model):
             'context': self.env.context
             }
     
-    @api.multi  
-    def product_uom_change(self, cursor, user, ids, pricelist, product, qty=0,
+    @api.multi
+    @api.onchange('product_uom')  
+    def product_uom_change(self, pricelist, product, qty=0,
             uom=False, qty_uos=0, uos=False, name='', partner_id=False,
-            lang=False, update_tax=True, date_order=False, context=None):
-        context = context or {}
-        lang = lang or ('lang' in context and context['lang'])
-        if not uom:
-            return {'value': {'price_unit': 0.0, 'product_uom' : uom or False}}
-        return self.product_id_change(cursor, user, ids, pricelist, product,
+            lang=False, update_tax=True, date_order=False):
+        
+        return super(sale_order_line,self).product_id_change(pricelist, product,
                 qty=qty, uom=uom, qty_uos=qty_uos, uos=uos, name=name,
                 partner_id=partner_id, lang=lang, update_tax=update_tax,
-                date_order=date_order, context=context)
+                date_order=date_order)
         
-    @api.multi  
+    @api.multi 
+    @api.onchange('product_id','product_uom_qty')
     def product_id_change_sale_mfg(self, pricelist, product, qty=0,
             uom=False, qty_uos=0, uos=False, name='', partner_id=False,
             lang=False, update_tax=True, date_order=False, packaging=False,
@@ -229,11 +250,12 @@ class sale_order_line(models.Model):
         if not res['value'].get('name',False): res['value']['name'] = name
         if not res['value'].get('product_packaging',False): res['value']['product_packaging'] = packaging
         if not res['value'].get('production_id',False): res['value']['production_id'] = production_id
-        if not res['value'].get('production_sale_margin_id'): res['value']['production_sale_margin_id'] = self.production_sale_margin_id
+        if not res['value'].get('production_sale_margin_id'): res['value']['production_sale_margin_id'] = self.production_sale_margin_id.id
         if not res['value'].get('state',False): res['value']['state'] = 'draft'
         
         return res
-            
+
+
 
 class sale_order(models.Model):
     _inherit = "sale.order"
