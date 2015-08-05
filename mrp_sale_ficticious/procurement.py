@@ -26,24 +26,28 @@ from openerp import models, fields, api, exceptions, _
 class procurement_order(models.Model):
     _inherit = 'procurement.order'
     
+    def make_mo(self, cr, uid, procurement, context=None):
+        """ Make Manufacturing(production) order from procurement
+        @return: New created Production Orders procurement wise
+        """
+        if procurement.sale_line_id and procurement.sale_line_id.production_id:
+            return {procurement.id : False}
+        return super(procurement_order, self).make_mo(cr, uid, procurement, context=context)
     
     def _run(self, cr, uid, procurement, context=None):
-        
-
+        result = super(procurement_order, self)._run(cr, uid, procurement, context=context)
         if procurement.sale_line_id and procurement.sale_line_id.production_id:
             res = {}
             production_obj = self.pool.get('mrp.production')
             defaults = self._prepare_mo_vals(cr, uid, procurement, context=context)
-            defaults['is_sale_quote'] = False,
             defaults['sale_order_line_id'] = procurement.sale_line_id.id         
             defaults['sale_order_id'] = procurement.sale_line_id.order_id.id
             defaults['analytic_account_id'] = procurement.sale_line_id.order_id.project_id.id
             defaults['project'] = procurement.sale_line_id.order_id.main_project_id.id       
-            
+            defaults['is_sale_quote'] = False
 
             new_production = procurement.sale_line_id.production_id.copy(defaults)
             
-            new_production.write({'is_sale_quote':False})
             procurement.sale_line_id.write({'production_actual_id':new_production.id})
 #            self.write(cr, uid, [procurement.id], {'production_id': new_production.id})
             self.production_order_create_note(cr, uid, procurement, context=context)
@@ -52,7 +56,7 @@ class procurement_order(models.Model):
             res[procurement.id] = new_production
             return res
         else:
-            return super(procurement_order, self)._run(cr, uid, procurement, context=context)
+            return result
 
 
             

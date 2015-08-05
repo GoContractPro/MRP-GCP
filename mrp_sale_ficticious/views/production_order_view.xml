@@ -2,7 +2,7 @@
 <openerp>
 	<data>
 
-        <record id="mrp_production_form_view_inh3" model="ir.ui.view">
+        <!--record id="mrp_production_form_view_inh3" model="ir.ui.view">
 	        <field name="name">mrp.production.form.inherit</field>
 	        <field name="model">mrp.production</field>
 	        <field name="inherit_id" ref="mrp_operations.mrp_production_form_inherit_view"/>
@@ -10,7 +10,7 @@
 		        	<group string="Planned Date" position ="replace"/>
 		        	
 		        </field>
-        </record>
+        </record-->
         
         
         <record id="mrp_production_form_view_inh2" model="ir.ui.view">
