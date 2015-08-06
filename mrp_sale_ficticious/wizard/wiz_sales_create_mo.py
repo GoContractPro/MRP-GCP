@@ -105,7 +105,7 @@ class WizSaleCreateFictious(models.Model):
                                               'production_id':new_production.id,
                                               })
                 
-                prices = sale_line.get_production_sale_line_price()
+                prices = sale_line.get_production_sale_line_price(product_uom_qty = qty.product_qty, production_sale_margin_id = self.production_sale_margin_id.id)
                 
                 result = sale_line.product_id_change_sale_mfg(sale_line.order_id.pricelist_id.id, sale_line.product_id.id,sale_line.product_uom_qty,
                                             uom=sale_line.product_uom.id, qty_uos =  sale_line.product_uos_qty, uos=sale_line.product_uos.id, 
