@@ -92,8 +92,8 @@ class WizSaleCreateFictious(models.Model):
             new_production.action_compute()
             new_production.calculate_production_estimated_cost()
             
-            if new_production.project_id and self.project_id.id:
-                new_production.project_id.write({"parent_id":self.project_id.id})
+#            if new_production.project_id and self.project_id.id:
+#                new_production.project_id.write({"parent_id":self.project_id.id})
                 
             for qty in self.product_qtys:              
                 

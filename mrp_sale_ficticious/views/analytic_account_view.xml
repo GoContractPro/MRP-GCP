@@ -6,7 +6,7 @@
             <field name="name">estimated.cost.list.view</field>
             <field name="model">account.analytic.line</field>
             <field name="inherit_id" ref="mrp_production_project_estimated_cost.view_account_analytic_line_tree_inh_estimatedcost"/>
-            <field name="priority" eval="50"/>
+            <field name="priority" eval="16"/>
             	<field name="arch" type="xml">
                 
 	                 <field name="date" position="after">

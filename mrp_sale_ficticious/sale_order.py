@@ -185,7 +185,7 @@ class sale_order_line(models.Model):
         self.ensure_one()
         analytic_line_obj = self.env['account.analytic.line']
         id2 = self.env.ref(
-            'mrp_production_project_estimated_cost.estimated_cost_list_view')
+            'mrp_sale_ficticious.estimated_cost_list_view_inherit1')
         search_view = self.env.ref('mrp_project_link.account_analytic_line'
                                    '_mrp_search_view')
         analytic_line_list = analytic_line_obj.search(
