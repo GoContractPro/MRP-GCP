@@ -131,10 +131,10 @@ class sale_order_line(models.Model):
     
     
     @api.multi
-    def get_production_sale_line_price(self):
+    def get_production_sale_line_price(self, product_uom_qty = False, production_sale_margin_id = False ):
         
         if self.production_id:
-            self.production_id.create_sale_analytic_production_estimated_cost(sale_order_line=self)
+            self.production_id.create_sale_analytic_production_estimated_cost(sale_order_line=self, product_uom_qty = product_uom_qty)
         else:
             raise exceptions.Warning(
                     _("Sales line has no MFG orders."))
@@ -144,11 +144,13 @@ class sale_order_line(models.Model):
         production_cost = sum([line.estim_avg_cost for line in
                              analytic_lines])
         
-        unit_avg_cost =  - production_cost / self.product_uom_qty
+        unit_avg_cost =  - production_cost / product_uom_qty
+        
+        multiplier = self.env['production.sale.margin'].browse(production_sale_margin_id).multiplier or 1.0
         
         if self.production_sale_margin_id :
             
-            price = unit_avg_cost * (self.production_sale_margin_id.multiplier or 1.0)
+            price = unit_avg_cost * multiplier
         
         else:
             price = 1.0
@@ -160,13 +162,7 @@ class sale_order_line(models.Model):
         
         return vals
     
-    @api.multi
-    def update_mfg_sale_line_price(self):
-        
-        if self.production_id:
-            prices = self.get_production_sale_line_price()
-            self.write(prices)
-        return True
+
                 
     @api.multi
     def action_approve(self):
@@ -228,7 +224,7 @@ class sale_order_line(models.Model):
     def product_id_change_sale_mfg(self, pricelist, product, qty=0,
             uom=False, qty_uos=0, uos=False, name='', partner_id=False,
             lang=False, update_tax=True, date_order=False, packaging=False,
-            fiscal_position=False, flag=False, warehouse_id=False, production_id=False):
+            fiscal_position=False, flag=False, warehouse_id=False, production_id=False, production_sale_margin_id = False ):
         
         res = self.product_id_change_with_wh( pricelist, product, qty=qty,
             uom=uom, qty_uos=qty_uos, uos=uos, name=name, partner_id=partner_id,
@@ -236,7 +232,7 @@ class sale_order_line(models.Model):
         
         if self.production_id:
             
-            prices = self.get_production_sale_line_price()
+            prices = self.get_production_sale_line_price(product_uom_qty = qty, production_sale_margin_id = production_sale_margin_id)
             res['value']['purchase_price'] = prices.get('purchase_price',0.0)
             res['value']['production_avg_cost'] = prices.get('production_avg_cost',0.0)
             res['value']['price_unit'] = prices.get('price_unit',0.0)
@@ -256,7 +252,6 @@ class sale_order_line(models.Model):
         
         return res
         
-        return super(sale_order_line,self).copy(defaults)
 
 class sale_order(models.Model):
     _inherit = "sale.order"

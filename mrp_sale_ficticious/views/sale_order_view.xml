@@ -63,7 +63,7 @@
                        groups="base.group_user"
                        on_change="product_id_change_sale_mfg(parent.pricelist_id,product_id,product_uom_qty,False,product_uos_qty,False,
                        name,parent.partner_id, False, True, parent.date_order, product_packaging, parent.fiscal_position, False, 
-                       parent.warehouse_id, production_id)"
+                       parent.warehouse_id, production_id, production_sale_margin_id)"
                        readonly="[('production_id','=',True)]"/>
                    </xpath>
                    <xpath expr="//field[@name='order_line']/tree//field[@name='product_id']" position="replace">
@@ -72,7 +72,7 @@
                        groups="base.group_user"
                        on_change="product_id_change_sale_mfg(parent.pricelist_id,product_id,product_uom_qty,False,product_uos_qty,False,
                        name,parent.partner_id, False, True, parent.date_order, product_packaging, parent.fiscal_position, False, 
-                       parent.warehouse_id, production_id)"
+                       parent.warehouse_id, production_id, production_sale_margin_id)"
                        readonly="[('production_id','=',True)]"/>
                    </xpath>
                    
@@ -81,14 +81,14 @@
                              name="product_uom_qty" 
                        on_change="product_id_change_sale_mfg(parent.pricelist_id,product_id,product_uom_qty,
                        product_uom,product_uos_qty,False,name,parent.partner_id, False, False, parent.date_order, product_packaging,
-                       parent.fiscal_position, True, parent.warehouse_id,production_id)"/>
+                       parent.fiscal_position, True, parent.warehouse_id,production_id, production_sale_margin_id)"/>
                    </xpath>
                    <xpath expr="//field[@name='order_line']/tree//field[@name='product_uom_qty']" position="replace">
                        <field context="{'partner_id':parent.partner_id, 'quantity':product_uom_qty, 'pricelist':parent.pricelist_id, 'uom':product_uom}"
                              name="product_uom_qty" 
                        on_change="product_id_change_sale_mfg(parent.pricelist_id,product_id,product_uom_qty,
                        product_uom,product_uos_qty,False,name,parent.partner_id, False, False, parent.date_order, product_packaging, 
-                       parent.fiscal_position, True, parent.warehouse_id, production_id)"/>
+                       parent.fiscal_position, True, parent.warehouse_id, production_id,production_sale_margin_id)"/>
                    </xpath>
 
  <!--                 <xpath expr="//field[@name='order_line']/form//field[@name='product_uom']" position="replace">

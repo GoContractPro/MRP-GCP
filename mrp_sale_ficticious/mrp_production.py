@@ -72,7 +72,7 @@ class MrpProduction(models.Model):
     def create_production_estimated_cost(self):
         production = self
         if production.sale_order_line_id:
-            self.create_sale_analytic_production_estimated_cost(sale_order_line = production.sale_order_line_id)
+            self.create_sale_analytic_production_estimated_cost(sale_order_line = production.sale_order_line_id, product_uom_qty = production.sale_order_line_id.product_uom_qty )
         else:
             super(MrpProduction, self).create_production_estimated_cost()
             
@@ -130,7 +130,7 @@ class MrpProduction(models.Model):
         return vals
 
     @api.multi
-    def create_sale_analytic_production_estimated_cost(self, sale_order_line=None):
+    def create_sale_analytic_production_estimated_cost(self, sale_order_line=None, product_uom_qty = False):
         
         analytic_line_obj = self.env['account.analytic.line']
         cond = [('sale_order_line_id', '=', sale_order_line.id)]
@@ -143,6 +143,10 @@ class MrpProduction(models.Model):
             raise exceptions.Warning(
                     _("Sale Order Line Required."))
         
+        if not product_uom_qty:
+            raise exceptions.Warning(
+                    _("Sale Order Line Quantity Required."))
+        
         
         for line in production.product_lines:
             if not line.product_id:
@@ -150,7 +154,7 @@ class MrpProduction(models.Model):
                     _("One consume line has no product assigned."))
             name = _('%s-%s' % (production.name, line.work_order.name or ''))
             product = line.product_id
-            qty = line.product_qty * sale_order_line.product_uom_qty
+            qty = line.product_qty * product_uom_qty
             vals = production._prepare_sale_cost_analytic_line(
                 journal, name, sale_order_line = sale_order_line, product = product, workorder=line.work_order,
                 qty=qty, estim_std=-(qty * product.manual_standard_cost),
@@ -196,7 +200,7 @@ class MrpProduction(models.Model):
                         (production.name, line.routing_wc_line.operation.code,
                          line.workcenter_id.name))
                 product = line.workcenter_id.product_id
-                estim_cost = -(line.workcenter_id.costs_cycle * line.cycle) *  sale_order_line.product_uom_qty
+                estim_cost = -(line.workcenter_id.costs_cycle * line.cycle) *  product_uom_qty
                 vals = production._prepare_sale_cost_analytic_line(
                     journal, name, sale_order_line = sale_order_line, product = product, workorder=line,
                     qty=line.cycle, estim_std=estim_cost,
@@ -210,7 +214,7 @@ class MrpProduction(models.Model):
                 name = (_('%s-%s-H-%s') %
                         (production.name, line.routing_wc_line.operation.code,
                          line.workcenter_id.name))
-                hour = line.hour *  sale_order_line.product_uom_qty
+                hour = line.hour *  product_uom_qty
                 if wc.time_stop and not line.workcenter_id.post_op_product:
                     hour += wc.time_stop
                 if wc.time_start and not line.workcenter_id.pre_op_product:
@@ -232,8 +236,8 @@ class MrpProduction(models.Model):
                 name = (_('%s-%s-%s') %
                         (production.name, line.routing_wc_line.operation.code,
                          line.workcenter_id.product_id.name))
-                estim_cost = -(wc.op_number * wc.op_avg_cost * line.hour) * sale_order_line.product_uom_qty
-                qty = line.hour * wc.op_number * sale_order_line.product_uom_qty
+                estim_cost = -(wc.op_number * wc.op_avg_cost * line.hour) * product_uom_qty
+                qty = line.hour * wc.op_number * product_uom_qty
                 
                 vals = production._prepare_sale_cost_analytic_line(
                     journal, name, sale_order_line = sale_order_line, product = line.workcenter_id.product_id,
@@ -268,9 +272,17 @@ class MrpProduction(models.Model):
         for line in so_lines_to_update:
             
             for line.state in ['draft']:
-                line.update_mfg_sale_line_price()
+                self.update_mfg_sale_line_price(line)
             
         return super(MrpProduction, self).write(vals,update=update,mini=mini)
+    
+    @api.multi
+    def update_mfg_sale_line_price(self, sale_line):
+        
+        if sale_line.production_id:
+            prices = sale_line.get_production_sale_line_price(sale_line.product_uom_qty, sale_line.production_sale_margin_id.id)
+            sale_line.write(prices)
+        return True
 
     @api.multi
     def copy(self,default=None):
