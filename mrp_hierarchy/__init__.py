@@ -18,10 +18,4 @@
 #    along with this program.  If not, see <http://www.gnu.org/licenses/>
 #
 ##############################################################################
-
-import mrp_production
-import sale_order
-import wizard
-import procurement
-import account_analytic_line
-import stock
+import mrp_hierarchy

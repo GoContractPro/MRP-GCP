@@ -20,6 +20,7 @@
 ##############################################################################
 
 from openerp import models, fields, api, exceptions, _
+from jinja2 import defaults
 
 
 class ProductionSalesMargin(models.Model):
@@ -254,8 +255,8 @@ class sale_order_line(models.Model):
         if not res['value'].get('state',False): res['value']['state'] = 'draft'
         
         return res
-
-
+        
+        return super(sale_order_line,self).copy(defaults)
 
 class sale_order(models.Model):
     _inherit = "sale.order"
@@ -291,4 +292,25 @@ class sale_order(models.Model):
                 }
  
 
+    @api.multi
+    def copy(self,default = None):
+        
+        if not default: 
+            default = {}
+        
+        
+        default['main_project_id'] = False
+        default['project_id'] = False
+        
+        
+        res = super(sale_order,self).copy(default)
+        
+        for line in res.order_line:
+                
+            if line.production_actual_id:
+                    
+                line.write({'production_actual_id':False})
+            
+        
+        return res
         

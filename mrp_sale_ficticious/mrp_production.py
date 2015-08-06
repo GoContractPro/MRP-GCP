@@ -275,9 +275,9 @@ class MrpProduction(models.Model):
     @api.multi
     def copy(self,default=None):
         
-        default = {} if default is None else default.copy()
+#        default = {} if default is None else default.copy()
         
-        default['origin'] = (self.origin or '') + "[Copy-" + (self.name or '') + "]"         
+#        default['origin'] = (self.origin or '') + "[Copy-" + (self.name or '') + "]"         
         return super(MrpProduction, self).copy( default)
             
 
