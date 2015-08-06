@@ -12,7 +12,23 @@
         				<attribute name="class">oe_form_sheet_full_screen</attribute>
     			</xpath>
             
-            
+            	<xpath expr="//field[@name='order_line']/form/header" position="inside">
+            		 <field name="name"/>
+            	     <button name="action_view_mos2" 
+	                    string="View MFG" 
+	                    
+	                    type="object" 
+	                    attrs="{'invisible':[('production_id','=',False)]}">
+                    </button>
+                    <button name="action_show_estimated_costs2" 
+	                    string="Costs analysis" 
+	                    type="object" 
+	                     
+	                    attrs="{'invisible':[('production_id','=',False)]}">
+	                 </button>
+	                 
+                   </xpath>
+
                  <field name="price_unit" position="after">
 	                 <group>
 							<field name="production_id" readonly='1'/>
@@ -20,6 +36,7 @@
 							<field name="production_avg_cost"/>
 							<field name="production_sale_margin_id" on_change="onchange_production_sale_margin(production_sale_margin_id)"/>
 	                 </group>
+	                 
                  </field>
                  
                 <button name="action_button_confirm" position="attributes"> 
@@ -54,7 +71,7 @@
                    		string="Create MFG Quote" 
                    		states="draft,sent,progress,manual" 
                    		type="object" 
-                   		class="oe_highlight" />   			
+                   		class="oe_stat_button" />   			
                  </field>
                  
 		      		<xpath expr="//field[@name='order_line']/form//field[@name='product_id']" position="replace">

@@ -81,6 +81,25 @@ class sale_order_line(models.Model):
             res['value']= {'price_unit': self.production_avg_cost * margin.multiplier }
 
         return res
+    
+    @api.multi
+    def action_view_mos2(self):
+        
+        if self.production_id:
+        
+            result = {
+                    "type": "ir.actions.act_window",
+                    "res_model": "mrp.production",
+                    "views": [[False, "form"]],
+                    "res_id": self.production_id.id,
+                    "target": "new",
+                    }
+        
+            return result
+        else:
+            
+            return False
+    
       
     @api.multi
     def action_view_mos(self):
@@ -178,6 +197,35 @@ class sale_order_line(models.Model):
         return res
     
     
+    
+    
+    @api.multi
+    def action_show_estimated_costs2(self):
+        self.ensure_one()
+        analytic_line_obj = self.env['account.analytic.line']
+        id2 = self.env.ref(
+            'mrp_sale_ficticious.estimated_cost_list_view_inherit1')
+        search_view = self.env.ref('mrp_project_link.account_analytic_line'
+                                   '_mrp_search_view')
+        analytic_line_list = analytic_line_obj.search(
+            [('sale_order_line_id', '=', self.id),
+             ('task_id', '=', False)])
+        self = self.with_context(
+                                 search_default_group_workorder=1,
+                                 search_default_group_journal=1)
+        return {
+            'view_type': 'form',
+            'view_mode': 'tree',
+            'res_model': 'account.analytic.line',
+            'views': [(id2.id, 'tree')],
+            'search_view_id': search_view.id,
+            'view_id': False,
+            'type': 'ir.actions.act_window',
+            'target': 'new',
+            'domain': "[('id','in',[" +
+            ','.join(map(str, analytic_line_list.ids)) + "])]",
+            'context': self.env.context
+            }   
 
     
     @api.multi
