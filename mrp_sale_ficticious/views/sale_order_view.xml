@@ -13,7 +13,7 @@
     			</xpath>
             
             	<xpath expr="//field[@name='order_line']/form/header" position="inside">
-            		 <field name="name"/>
+            		 
             	     <button name="action_view_mos2" 
 	                    string="View MFG" 
 	                    
