@@ -52,7 +52,7 @@
 	                    attrs="{'invisible':[('production_id','=',False)]}">
                     </button>
                     <button name="action_show_estimated_costs" 
-	                    string="Costs analysis" class="oe_inline oe_stat_button" 
+	                    string="View MFG Costs" class="oe_inline oe_stat_button" 
 	                    type="object" 
 	                    icon="STOCK_INFO" 
 	                    attrs="{'invisible':[('production_id','=',False)]}">
@@ -71,7 +71,7 @@
                    		string="Create MFG Quote" 
                    		states="draft,sent,progress,manual" 
                    		type="object" 
-                   		class="oe_stat_button" />   			
+                   		 />   			
                  </field>
                  
 		      		<xpath expr="//field[@name='order_line']/form//field[@name='product_id']" position="replace">
