@@ -27,6 +27,7 @@ import openerp.addons.decimal_precision as dp
 class WizSaleCreateFictious(models.Model):
     _name = "wiz.sale.create.fictitious"
 
+    name = fields.Text('Description', )
     date_planned = fields.Datetime(
         string='Scheduled Date', required=True, default=fields.Datetime.now())
     load_on_product = fields.Boolean("Load cost on product")
@@ -34,6 +35,7 @@ class WizSaleCreateFictious(models.Model):
     production_sale_margin_id = fields.Many2one('production.sale.margin','Mfg Sales Multiplier ')
     sale_order_id = fields.Many2one("sale.order", string= "Sales Order")
     product_id = fields.Many2one("product.product" , string="Product")
+    production_id = fields.Many2one('mrp.production', 'MFG Quote', domain="[('is_sale_quote','=',True),('product_id','=',product_id)]")
     product_qtys = fields.One2many('wiz.sale.create.so.line.qty', 'mfg_sale_wiz_id', string='Quantities' )
     product_uom = fields.Many2one('product.uom', 'Product Unit of Measure',  readonly=False)
     product_uos_qty = fields.Float('Product UoS Quantity', readonly=False)
@@ -76,21 +78,26 @@ class WizSaleCreateFictious(models.Model):
             elif self.project_id != self.sale_order_id.main_project_id:
                 raise exceptions.Warning(_("You have set Project different than the Sales Order Project"))
         
-            vals = {'product_id': self.product_id.id,
-                    'product_qty': 1,
-                    'date_planned': self.date_planned,
-                    'user_id': self._uid,
-                    'active': True,
-                    'is_sale_quote':True,
-                    'product_uom' :self.product_uom.id,
-                    'bom_id': self.bom_id.id,
-                    'routing_id' : self.routing_id.id,                  
-                    'sale_order_id': active_id,
-                    }
             
-            new_production = production_obj.create(vals)
-            new_production.action_compute()
-            new_production.calculate_production_estimated_cost()
+            if not self.production_id:
+                vals = {'product_id': self.product_id.id,
+                        'product_qty': 1,
+                        'date_planned': self.date_planned,
+                        'user_id': self._uid,
+                        'active': True,
+                        'is_sale_quote':True,
+                        'product_uom' :self.product_uom.id,
+                        'bom_id': self.bom_id.id,
+                        'routing_id' : self.routing_id.id,                  
+                        'sale_order_id': active_id,
+                        }
+                
+                sale_production = production_obj.create(vals)
+            else:
+                sale_production = self.production_id
+            
+            sale_production.action_compute()
+            sale_production.calculate_production_estimated_cost()
             
 #            if new_production.project_id and self.project_id.id:
 #                new_production.project_id.write({"parent_id":self.project_id.id})
@@ -99,10 +106,10 @@ class WizSaleCreateFictious(models.Model):
                 
                 sale_line = sale_line_obj.create({'order_id':active_id,
                                               'product_id':self.product_id.id,
-                                              'name':'mfg quote--' + self.product_id.name,
+                                              'name': (self.name or ''),
                                               'production_sale_margin_id':self.production_sale_margin_id.id,
                                               'product_uom_qty':qty.product_qty,
-                                              'production_id':new_production.id,
+                                              'production_id':sale_production.id,
                                               })
                 
                 prices = sale_line.get_production_sale_line_price(product_uom_qty = qty.product_qty, production_sale_margin_id = self.production_sale_margin_id.id)
@@ -144,11 +151,21 @@ class WizSaleCreateFictious(models.Model):
             bom_point = bom_obj.browse(cr, uid, bom_id, context=context)
             routing_id = bom_point.routing_id.id or False
         product_uom_id = product.uom_id and product.uom_id.id or False
-        result['value'] = {'product_uos_qty': 0, 'product_uos': False, 'product_uom': product_uom_id, 'bom_id': bom_id, 'routing_id': routing_id}
+     
+        name = 'Mfg--' + (product.name or product.description_sale)
+            
+        result['value'] = {'product_uos_qty': 0, 'product_uos': False, 
+                        'product_uom': product_uom_id, 'bom_id': bom_id,
+                        'routing_id': routing_id, 'name': name}
+                
         if product.uos_id.id:
 #            result['value']['product_uos_qty'] = product_qty * product.uos_coeff
             result['value']['product_uos'] = product.uos_id.id
             self.write(cr, uid, ids,result['value'],context=context)
+            
+            
+
+                
         return result
     
 

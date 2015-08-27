@@ -1,1 +1,2 @@
 import wiz_sales_create_mo
+import mrp_sale_warning

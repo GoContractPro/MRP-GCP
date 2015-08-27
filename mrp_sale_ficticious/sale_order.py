@@ -54,7 +54,7 @@ class sale_order_line(models.Model):
         return self.env.ref('mrp_sale_ficticious.25_percent_prod_sale_margin',False)
     
 
-    
+    product_id = fields.Many2one('product.product', 'Product', domain=[('sale_ok', '=', True)], change_default=True, readonly="[('production_id','!=',False)]", states={'draft': [('readonly', False)]}, ondelete='restrict')
     production_id = fields.Many2one('mrp.production', 'MFG Quote')
     production_actual_id = fields.Many2one('mrp.production', 'MFG Production order')
 #    production_avg_cost = fields.Float(string="Estimated Cost",
@@ -274,7 +274,9 @@ class sale_order_line(models.Model):
             lang=False, update_tax=True, date_order=False, packaging=False,
             fiscal_position=False, flag=False, warehouse_id=False, production_id=False, production_sale_margin_id = False ):
         
-        res = self.product_id_change_with_wh( pricelist, product, qty=qty,
+        
+        
+        res = super(sale_order_line,self).product_id_change_with_wh( pricelist, product, qty=qty,
             uom=uom, qty_uos=qty_uos, uos=uos, name=name, partner_id=partner_id,
             lang=lang, update_tax=update_tax, date_order=date_order, packaging=packaging, fiscal_position=fiscal_position, flag=flag, warehouse_id=warehouse_id)
         
@@ -284,10 +286,12 @@ class sale_order_line(models.Model):
             res['value']['purchase_price'] = prices.get('purchase_price',0.0)
             res['value']['production_avg_cost'] = prices.get('production_avg_cost',0.0)
             res['value']['price_unit'] = prices.get('price_unit',0.0)
-         
+        
+        
+        
         if not res['value'].get('product_id',False): res['value']['product_id'] = product
         
-       
+        if not res['value'].get('partner_id',False): res['value']['partner_id'] = partner_id
         if not res['value'].get('product_uom_qty', False): res['value']['product_uom_qty'] = qty
         if not res['value'].get('product_uom',False): res['value']['product_uom'] = uom
         if not res['value'].get('product_uos_qty',False): res['value']['product_uos_qty'] = qty
@@ -298,12 +302,27 @@ class sale_order_line(models.Model):
         if not res['value'].get('production_sale_margin_id'): res['value']['production_sale_margin_id'] = self.production_sale_margin_id.id
         if not res['value'].get('state',False): res['value']['state'] = 'draft'
         
+        
         return res
         
 
 class sale_order(models.Model):
     _inherit = "sale.order"
    
+    @api.multi
+    def action_button_confirm(self):
+        
+        msg = ''
+        for line in self.order_line:
+            
+            msg += _('%s on Order Line %s Quantity %s will be deleted \n'% (line.product_id.name, line.sequence, line.product_uom_qty))
+        
+        if msg != '':
+            return self.env['mrp.sale.warning'].warning('Confirm Delete',msg)
+        else:
+            return super(sale_order.self).action_button_confirm()
+        
+    
     def _amount_all(self, cr, uid, ids, field_name, arg, context=None):
         cur_obj = self.pool.get('res.currency')
         res = {}

@@ -9,10 +9,14 @@
                 	
                 	<group col="8" colspan='4'>
                 		<group>
+                			
                  			<field name="product_id"  domain="[('bom_ids','!=',False),('bom_ids.type','!=','phantom')]" 
                  					on_change="product_id_change(product_id)" 
                  					class="oe_inline" context='{"default_type": "product"}'/>
+                 			<field name="production_id"  />
+                 			<field name="name"/>
                         	<field name="product_uom"  invisible='0' readonly='0' />
+                        	
                         	<field name="bom_id"/>
 	                        <field name="routing_id" />
                         </group>

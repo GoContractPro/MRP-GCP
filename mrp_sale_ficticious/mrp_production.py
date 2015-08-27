@@ -28,7 +28,7 @@ class MrpProduction(models.Model):
     sale_order_line_id = fields.Many2one("sale.order.line", string= "Sales Line", ondelete='cascade')
     sale_order_id = fields.Many2one("sale.order", string= "Sale Order ")
     sale_project_id =  fields.Many2one("project.project", string="Sales Project")
-    is_sale_quote = fields.Boolean("Confirmed Quote")
+    is_sale_quote = fields.Boolean("Confirmed Quote", default=lambda self: self.env.context.get('default_is_sale_quote',False))
     product_lines = fields.One2many('mrp.production.product.line', 'production_id', 'Scheduled goods',
             readonly=True,copy=True )
     workcenter_lines = fields.One2many('mrp.production.workcenter.line', 'production_id', 'Work Centers Utilisation',
@@ -40,7 +40,7 @@ class MrpProduction(models.Model):
         self.ensure_one()
         analytic_line_obj = self.env['account.analytic.line']
         id2 = self.env.ref(
-            'mrp_production_project_estimated_cost.estimated_cost_list_view')
+            'mrp_sale_ficticious.estimated_cost_list_view_inherit1')
         search_view = self.env.ref('mrp_project_link.account_analytic_line'
                                    '_mrp_search_view')
         if self.sale_order_line_id:

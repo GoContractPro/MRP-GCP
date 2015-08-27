@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<openerp>
+   <data>
+    <record id="warning_sale_mrp_form" model="ir.ui.view">
+        <field name="name">warning.sale.mrp.form</field>
+        <field name="model">mrp.sale.warning</field>
+        <field eval="20" name="priority"/>
+        <field name="arch" type="xml">
+            <form string="Warning" version="7.0">
+                <field name="msg"  nolabel="1" />
+                <footer>
+                    <button name="action_continue_sale_confirm" string="OK" class="oe_highlight"   />
+                    <button name="action_cancel_sale_confirm" string="Cancel" class="oe_highlight"  /> 
+                </footer>
+            </form>
+        </field>
+    </record>
+
+    <record model="ir.actions.act_window" id="action_sale_mrp_warning">
+        <field name="name">Warning</field>
+        <field name="res_model">warning.warning</field>
+        <field name="view_type">form</field>
+        <field name="view_mode">form</field>
+        <field name="view_id" ref="warning_form" />
+        <field name="target">new</field>
+    </record>
+	</data>
+</openerp>

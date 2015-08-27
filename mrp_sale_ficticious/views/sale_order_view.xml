@@ -5,7 +5,7 @@
         <record id="sale_form_view_mfg_quote_estimatedcost" model="ir.ui.view">
             <field name="name">sale.form.view.mfg.quote.estimatedcost</field>
             <field name="model">sale.order</field>
-            <field name="inherit_id" ref="sale.view_order_form"/>
+            <field name="inherit_id" ref="sale_stock.view_order_form_inherit"/>
             <field name="arch" type="xml">
             
             	<xpath expr="//sheet" position="attributes">
@@ -38,10 +38,6 @@
 	                 </group>
 	                 
                  </field>
-                 
-                <button name="action_button_confirm" position="attributes"> 
-                	<attribute name="confirm">Are you Sure?, If Production Quote is not approved, the Sale Order Line will be deleted </attribute>>
-                </button>
                  
                 <xpath expr="//field[@name='order_line']/tree/field[@name='price_subtotal']" position="after">
                     <field name="production_id" readonly="1"/>
@@ -81,7 +77,7 @@
                        on_change="product_id_change_sale_mfg(parent.pricelist_id,product_id,product_uom_qty,False,product_uos_qty,False,
                        name,parent.partner_id, False, True, parent.date_order, product_packaging, parent.fiscal_position, False, 
                        parent.warehouse_id, production_id, production_sale_margin_id)"
-                       readonly="[('production_id','=',True)]"/>
+                       />
                    </xpath>
                    <xpath expr="//field[@name='order_line']/tree//field[@name='product_id']" position="replace">
                        <field name="product_id"
@@ -90,7 +86,7 @@
                        on_change="product_id_change_sale_mfg(parent.pricelist_id,product_id,product_uom_qty,False,product_uos_qty,False,
                        name,parent.partner_id, False, True, parent.date_order, product_packaging, parent.fiscal_position, False, 
                        parent.warehouse_id, production_id, production_sale_margin_id)"
-                       readonly="[('production_id','=',True)]"/>
+                       />
                    </xpath>
                    
                    <xpath expr="//field[@name='order_line']/form//field[@name='product_uom_qty']" position="replace">
