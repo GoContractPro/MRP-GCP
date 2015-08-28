@@ -56,6 +56,7 @@ class sale_order_line(models.Model):
 
     product_id = fields.Many2one('product.product', 'Product', domain=[('sale_ok', '=', True)], change_default=True, readonly="[('production_id','!=',False)]", states={'draft': [('readonly', False)]}, ondelete='restrict')
     production_id = fields.Many2one('mrp.production', 'MFG Quote')
+    mfg_quote = fields.Boolean('Is MFG Quote Line')
     production_actual_id = fields.Many2one('mrp.production', 'MFG Production order')
 #    production_avg_cost = fields.Float(string="Estimated Cost",
 #                            compute="get_unit_avg_cost", store=True)

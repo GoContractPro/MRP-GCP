@@ -113,7 +113,10 @@
                        <field context="{'partner_id':parent.partner_id, 'quantity':product_uos_qty, 'pricelist':parent.pricelist_id, 'uom':product_uom}"
                              name="product_uos_qty" class="oe_inline"
                        on_change="product_id_change_sale_mfg(parent.pricelist_id,product_id,product_uom_qty,product_uom,product_uos_qty,product_uos,name,parent.partner_id, False, False, parent.date_order, product_packaging, parent.fiscal_position, True, parent.warehouse_id, context)"/>
-                   </xpath>                                           
+                   </xpath> 
+                   
+
+                                         
 
             </field>
         </record>

@@ -76,7 +76,115 @@ class MrpProduction(models.Model):
         else:
             super(MrpProduction, self).create_production_estimated_cost()
             
+    @api.multi
+    def get_product_cost(self, product):
+        
+        return product.manual_standard_cost or product.cost_price or product.standard_price 
 
+    @api.multi
+    def calculate_production_estimated_cost(self):
+        analytic_line_obj = self.env['account.analytic.line']
+        for record in self:
+            cond = [('mrp_production_id', '=', record.id)]
+            analytic_line_obj.search(cond).unlink()
+            journal = record.env.ref('mrp_production_project_estimated_cost.'
+                                     'analytic_journal_materials', False)
+            for line in record.product_lines:
+                if not line.product_id:
+                    raise exceptions.Warning(
+                        _("One consume line has no product assigned."))
+                name = _('%s-%s' % (record.name, line.work_order.name or ''))
+                product = line.product_id
+                qty = line.product_qty
+                amount = -qty * self.get_product_cost(product) 
+                vals = record._prepare_cost_analytic_line(
+                    journal, name, record, product, workorder=line.work_order,
+                    qty=qty, estim_std=-(qty * product.manual_standard_cost),
+                    estim_avg=-amount)
+                analytic_line_obj.create(vals)
+            journal = record.env.ref('mrp_production_project_estimated_cost.'
+                                     'analytic_journal_machines', False)
+            for line in record.workcenter_lines:
+                op_wc_lines = line.routing_wc_line.op_wc_lines
+                wc = op_wc_lines.filtered(lambda r: r.workcenter ==
+                                          line.workcenter_id) or \
+                    line.workcenter_id
+                if (wc.time_start and line.workcenter_id.pre_op_product):
+                    name = (_('%s-%s Pre-operation') %
+                            (record.name, line.workcenter_id.name))
+                    product = line.workcenter_id.pre_op_product
+                    amount = self.get_product_cost(product) * wc.time_start
+                    qty = wc.time_start
+                    vals = record._prepare_cost_analytic_line(
+                        journal, name, record, product, workorder=line,
+                        qty=qty, amount=-amount,
+                        estim_std=-(qty * product.manual_standard_cost),
+                        estim_avg=-(amount))
+                    analytic_line_obj.create(vals)
+                if (wc.time_stop and line.workcenter_id.post_op_product):
+                    name = (_('%s-%s Post-operation') %
+                            (record.name, line.workcenter_id.name))
+                    product = line.workcenter_id.post_op_product
+                    amount = self.get_product_cost(product) * wc.time_stop
+                    qty = wc.time_stop
+                    vals = record._prepare_cost_analytic_line(
+                        journal, name, record, product, workorder=line,
+                        qty=qty, amount=-amount,
+                        estim_std=-(qty * product.manual_standard_cost),
+                        estim_avg=-(amount))
+                    analytic_line_obj.create(vals)
+                if line.cycle and line.workcenter_id.costs_cycle:
+                    if not line.workcenter_id.product_id:
+                        raise exceptions.Warning(
+                            _("There is at least this workcenter without "
+                              "product: %s") % line.workcenter_id.name)
+                    name = (_('%s-%s-C-%s') %
+                            (record.name, line.routing_wc_line.operation.code,
+                             line.workcenter_id.name))
+                    product = line.workcenter_id.product_id
+                    estim_cost = -(line.workcenter_id.costs_cycle * line.cycle)
+                    vals = record._prepare_cost_analytic_line(
+                        journal, name, record, product, workorder=line,
+                        qty=line.cycle, estim_std=estim_cost,
+                        estim_avg=estim_cost)
+                    analytic_line_obj.create(vals)
+                if line.hour and line.workcenter_id.costs_hour:
+                    if not line.workcenter_id.product_id:
+                        raise exceptions.Warning(
+                            _("There is at least this workcenter without "
+                              "product: %s") % line.workcenter_id.name)
+                    name = (_('%s-%s-H-%s') %
+                            (record.name, line.routing_wc_line.operation.code,
+                             line.workcenter_id.name))
+                    hour = line.hour
+                    if wc.time_stop and not line.workcenter_id.post_op_product:
+                        hour += wc.time_stop
+                    if wc.time_start and not line.workcenter_id.pre_op_product:
+                        hour += wc.time_start
+                    estim_cost = -(hour * line.workcenter_id.costs_hour)
+                    vals = record._prepare_cost_analytic_line(
+                        journal, name, record, line.workcenter_id.product_id,
+                        workorder=line, qty=hour,
+                        estim_std=estim_cost, estim_avg=estim_cost)
+                    analytic_line_obj.create(vals)
+                if wc.op_number > 0 and line.hour:
+                    if not line.workcenter_id.product_id:
+                        raise exceptions.Warning(
+                            _("There is at least this workcenter without "
+                              "product: %s") % line.workcenter_id.name)
+                    journal = record.env.ref(
+                        'mrp_production_project_estimated_cost.analytic_'
+                        'journal_operators', False)
+                    name = (_('%s-%s-%s') %
+                            (record.name, line.routing_wc_line.operation.code,
+                             line.workcenter_id.product_id.name))
+                    estim_cost = -(wc.op_number * wc.op_avg_cost * line.hour)
+                    qty = line.hour * wc.op_number
+                    vals = record._prepare_cost_analytic_line(
+                        journal, name, record, line.workcenter_id.product_id,
+                        workorder=line, qty=qty, estim_std=estim_cost,
+                        estim_avg=estim_cost)
+                    analytic_line_obj.create(vals)
 
     @api.multi                
     def _prepare_analytic_line(self, journal, name, production = None , product = None,
@@ -155,10 +263,11 @@ class MrpProduction(models.Model):
             name = _('%s-%s' % (production.name, line.work_order.name or ''))
             product = line.product_id
             qty = line.product_qty * product_uom_qty
+            amount = -qty * self.get_product_cost(product)
             vals = production._prepare_sale_cost_analytic_line(
                 journal, name, sale_order_line = sale_order_line, product = product, workorder=line.work_order,
                 qty=qty, estim_std=-(qty * product.manual_standard_cost),
-                estim_avg=-(qty * product.cost_price))
+                estim_avg= amount )
             analytic_line_obj.create(vals)
         journal = production.env.ref('mrp_production_project_estimated_cost.'
                                  'analytic_journal_machines', False)
@@ -171,7 +280,7 @@ class MrpProduction(models.Model):
                 name = (_('%s-%s Pre-operation') %
                         (production.name, line.workcenter_id.name))
                 product = line.workcenter_id.pre_op_product
-                amount = product.cost_price * wc.time_start
+                amount = self.get_product_cost(product) * wc.time_start
                 qty = wc.time_start
                 vals = production._prepare_sale_cost_analytic_line(
                     journal, name, sale_order_line = sale_order_line, product = product, workorder=line,
@@ -183,7 +292,7 @@ class MrpProduction(models.Model):
                 name = (_('%s-%s Post-operation') %
                         (production.name, line.workcenter_id.name))
                 product = line.workcenter_id.post_op_product
-                amount = product.cost_price * wc.time_stop
+                amount = self.get_product_cost(product) * wc.time_stop
                 qty = wc.time_stop
                 vals = production._prepare_sale_cost_analytic_line(
                     journal, name, sale_order_line = sale_order_line, product = product, workorder=line,

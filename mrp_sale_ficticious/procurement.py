@@ -51,6 +51,23 @@ class procurement_order(models.Model):
         defaults['origin'] = (procurement.sale_line_id.order_id.name or '') + "[MFG-" + (procurement.name or '') + "]"
 
         new_production = procurement.sale_line_id.production_id.copy(defaults)
+
+        qty =  procurement.product_qty
+        
+        for work_line in new_production.workcenter_lines:
+            cycle = work_line.cycle * qty
+            hour = work_line.hour * qty
+            vals = {'cycle':cycle,
+                   'hour':hour
+                   }
+           
+            work_line.write(vals)
+            
+        for product_line in new_production.product_lines:
+            product_qty = product_line.product_qty * qty
+            vals = {
+                    'product_qty':product_qty}
+            product_line.write(vals)
     
         procurement.sale_line_id.write({'production_actual_id':new_production.id})
 #            self.write(cr, uid, [procurement.id], {'production_id': new_production.id})

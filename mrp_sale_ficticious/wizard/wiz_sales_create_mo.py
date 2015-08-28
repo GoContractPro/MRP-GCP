@@ -110,6 +110,7 @@ class WizSaleCreateFictious(models.Model):
                                               'production_sale_margin_id':self.production_sale_margin_id.id,
                                               'product_uom_qty':qty.product_qty,
                                               'production_id':sale_production.id,
+                                              'mfg_quote':True,
                                               })
                 
                 prices = sale_line.get_production_sale_line_price(product_uom_qty = qty.product_qty, production_sale_margin_id = self.production_sale_margin_id.id)
