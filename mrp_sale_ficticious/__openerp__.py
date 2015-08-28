@@ -25,7 +25,7 @@
     'version': '1.0',
     'category': '',
     'complexity': "easy",
-    'category': 'Generic Modules/Others',
+    'category': 'Manufacturing, Sales',
     'description': """
     
     """,
@@ -37,7 +37,8 @@
     'data': [
         "views/analytic_account_view.xml",
         "views/production_order_view.xml",
-        "wizard/wizard_view.xml",
+        "wizard/create_sale_mfg_wizard_view.xml",
+        "wizard/mrp_sale_warning_view.xml",
         "views/sale_order_view.xml",
         "data/prod_sale_margin_data.xml",
         "data/sale_mrp_production_sequence.xml"

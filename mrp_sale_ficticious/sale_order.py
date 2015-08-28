@@ -310,17 +310,24 @@ class sale_order(models.Model):
     _inherit = "sale.order"
    
     @api.multi
-    def action_button_confirm(self):
+    def action_button_confirm_with_delete(self):
         
         msg = ''
-        for line in self.order_line:
-            
-            msg += _('%s on Order Line %s Quantity %s will be deleted \n'% (line.product_id.name, line.sequence, line.product_uom_qty))
+        lines_delete = []
         
-        if msg != '':
-            return self.env['mrp.sale.warning'].warning('Confirm Delete',msg)
+ #       for line in self.order_line:
+ #           if line.product_id and not line.is_approved:
+ #               msg += _('%s on Order Line %s Quantity %s will be deleted \n'% (line.product_id.name, line.sequence, line.product_uom_qty))
+                
+        for sale_line in self.order_line:
+            if sale_line.production_id and not sale_line.is_approved:
+                lines_delete.append(sale_line.id)
+                msg += _('%s on Order Line %s with quantity %s will be deleted \n'% (sale_line.product_id.name, sale_line.sequence, sale_line.product_uom_qty))
+                        
+        if lines_delete :           
+            return self.env['mrp.sale.warning'].delete_with_warning('Confirm Delete',message=msg,lines_delete=lines_delete)
         else:
-            return super(sale_order.self).action_button_confirm()
+            return super(sale_order, self).action_button_confirm()
         
     
     def _amount_all(self, cr, uid, ids, field_name, arg, context=None):

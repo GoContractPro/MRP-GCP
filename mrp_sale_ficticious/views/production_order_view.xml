@@ -27,7 +27,14 @@
             	 	<attribute name="readonly">1</attribute>
             	 </field>
 
-         	     	
+         	     <page string="Consumed Products" position="attributes" >
+         	     	<attribute name="attrs">{'invisible':[('is_sale_quote','=',True)]}</attribute>
+         	     </page>
+         	     
+         	     <page string="Finished Products" position="attributes" >
+         	     	<attribute name="attrs">{'invisible':[('is_sale_quote','=',True)]}</attribute>
+         	     </page>
+         	     
             	 <page string="Information" position="replace"/>
             	 
             	 <field name="cycle" position= "replace" />
@@ -140,8 +147,8 @@
         <menuitem action="sale_mrp_fictitious_production_action" id="menu_sale_mrp_fictitious_production_action"
             parent="mrp.menu_mrp_manufacturing" sequence="10"/>
             
-        <delete model="ir.ui.menu" id="mrp_production_project_estimated_cost.menu_mrp_fictitious_production_action" />
-           
+<!--         <delete model="ir.ui.menu" id="mrp_production_project_estimated_cost.menu_mrp_fictitious_production_action" />
+  -->          
 
  	</data>
 </openerp>

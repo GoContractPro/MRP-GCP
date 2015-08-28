@@ -9,8 +9,8 @@
             <form string="Warning" version="7.0">
                 <field name="msg"  nolabel="1" />
                 <footer>
-                    <button name="action_continue_sale_confirm" string="OK" class="oe_highlight"   />
-                    <button name="action_cancel_sale_confirm" string="Cancel" class="oe_highlight"  /> 
+                    <button name="action_continue_sale_confirm" string="OK" class="oe_highlight" type="object"  />
+                    <button name="action_cancel_sale_confirm" string="Cancel" class="oe_highlight" type="object"  /> 
                 </footer>
             </form>
         </field>
@@ -21,7 +21,7 @@
         <field name="res_model">warning.warning</field>
         <field name="view_type">form</field>
         <field name="view_mode">form</field>
-        <field name="view_id" ref="warning_form" />
+        <field name="view_id" ref="warning_sale_mrp_form" />
         <field name="target">new</field>
     </record>
 	</data>

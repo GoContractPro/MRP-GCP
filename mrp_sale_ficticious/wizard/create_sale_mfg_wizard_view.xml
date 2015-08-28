@@ -51,6 +51,15 @@
             </field>
         </record>   
         
+       <record id="act_sale_create_fictitious" model="ir.actions.act_window">
+            <field name="name">Create Sales Fictitious MFG Order</field>
+            <field name="res_model">wiz.sale.create.fictitious</field>
+            <field name="view_type">form</field>
+            <field name="view_mode">form</field>
+            <field name="view_id" ref="wiz_sale_create_fictitious_of_view" />
+            <field name="target">new</field>
+        </record>
+        
          <record id="wiz_sale_quantities_fictitious_view" model="ir.ui.view">
             <field name="name">wiz.sale.quantities.fictitious.view</field>
             <field name="model">wiz.sale.create.so.line.qty</field>
