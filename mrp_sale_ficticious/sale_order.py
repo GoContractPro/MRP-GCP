@@ -69,7 +69,8 @@ class sale_order_line(models.Model):
     _defaults = {
             'production_sale_margin_id': _get_margin                                       
             }
-        
+     
+
 
     @api.multi
     @api.onchange('production_sale_margin_id')
@@ -93,6 +94,25 @@ class sale_order_line(models.Model):
                     "res_model": "mrp.production",
                     "views": [[False, "form"]],
                     "res_id": self.production_id.id,
+                    "target": "new",
+                    }
+        
+            return result
+        else:
+            
+            return False
+        
+        
+    @api.multi
+    def action_view_mos3(self):
+        
+        if self.production_id:
+        
+            result = {
+                    "type": "ir.actions.act_window",
+                    "res_model": "mrp.production",
+                    "views": [[False, "form"]],
+                    "res_id": self.production_actual_id.id,
                     "target": "new",
                     }
         
@@ -149,12 +169,11 @@ class sale_order_line(models.Model):
             
         return  res
     
-    
     @api.multi
-    def get_production_sale_line_price(self, product_uom_qty = False, production_sale_margin_id = False ):
+    def get_sale_line_production_price_vals(self, product_uom_qty = False, production_sale_margin_id = False ):
         
         if self.production_id:
-            self.production_id.create_sale_analytic_production_estimated_cost(sale_order_line=self, product_uom_qty = product_uom_qty)
+            self.production_id._calculate_production_estimated_cost(sale_order_line=self, sale_qty = product_uom_qty)
         else:
             raise exceptions.Warning(
                     _("Sales line has no MFG orders."))
@@ -181,12 +200,9 @@ class sale_order_line(models.Model):
                 }
         
         return vals
-    
-
-                
+                 
     @api.multi
     def action_approve(self):
-        
         
         if not self.is_approved:
             vals = {'is_approved':True}
@@ -196,9 +212,6 @@ class sale_order_line(models.Model):
             res = {'value':vals}
         self.write(vals)
         return res
-    
-    
-    
     
     @api.multi
     def action_show_estimated_costs2(self):
@@ -274,21 +287,18 @@ class sale_order_line(models.Model):
             uom=False, qty_uos=0, uos=False, name='', partner_id=False,
             lang=False, update_tax=True, date_order=False, packaging=False,
             fiscal_position=False, flag=False, warehouse_id=False, production_id=False, production_sale_margin_id = False ):
-        
-        
-        
+
         res = super(sale_order_line,self).product_id_change_with_wh( pricelist, product, qty=qty,
             uom=uom, qty_uos=qty_uos, uos=uos, name=name, partner_id=partner_id,
             lang=lang, update_tax=update_tax, date_order=date_order, packaging=packaging, fiscal_position=fiscal_position, flag=flag, warehouse_id=warehouse_id)
         
         if self.production_id:
             
-            prices = self.get_production_sale_line_price(product_uom_qty = qty, production_sale_margin_id = production_sale_margin_id)
+            prices = self.get_sale_line_production_price_vals(product_uom_qty = qty, production_sale_margin_id = production_sale_margin_id)
             res['value']['purchase_price'] = prices.get('purchase_price',0.0)
             res['value']['production_avg_cost'] = prices.get('production_avg_cost',0.0)
             res['value']['price_unit'] = prices.get('price_unit',0.0)
-        
-        
+     
         
         if not res['value'].get('product_id',False): res['value']['product_id'] = product
         

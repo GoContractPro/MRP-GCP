@@ -78,6 +78,10 @@ class WizSaleCreateFictious(models.Model):
             elif self.project_id != self.sale_order_id.main_project_id:
                 raise exceptions.Warning(_("You have set Project different than the Sales Order Project"))
         
+            sequence_obj = self.env['ir.sequence']
+            name = sequence_obj.get('sale.mrp.production')
+            project_obj = project_obj.create({'name':name})
+            
             
             if not self.production_id:
                 vals = {'product_id': self.product_id.id,
@@ -90,6 +94,9 @@ class WizSaleCreateFictious(models.Model):
                         'bom_id': self.bom_id.id,
                         'routing_id' : self.routing_id.id,                  
                         'sale_order_id': active_id,
+                        'name':name,
+                        'project_id': project_obj.id,
+                        'analytic_account_id':project_obj.analytic_account_id.id
                         }
                 
                 sale_production = production_obj.create(vals)
@@ -97,7 +104,7 @@ class WizSaleCreateFictious(models.Model):
                 sale_production = self.production_id
             
             sale_production.action_compute()
-            sale_production.calculate_production_estimated_cost()
+#            sale_production.calculate_production_estimated_cost()
             
 #            if new_production.project_id and self.project_id.id:
 #                new_production.project_id.write({"parent_id":self.project_id.id})
@@ -113,20 +120,28 @@ class WizSaleCreateFictious(models.Model):
                                               'mfg_quote':True,
                                               })
                 
-                prices = sale_line.get_production_sale_line_price(product_uom_qty = qty.product_qty, production_sale_margin_id = self.production_sale_margin_id.id)
+#                prices = sale_line.get_sale_line_production_price_vals(product_uom_qty = qty.product_qty, production_sale_margin_id = self.production_sale_margin_id.id)
+                
                 
                 result = sale_line.product_id_change_sale_mfg(sale_line.order_id.pricelist_id.id, sale_line.product_id.id,sale_line.product_uom_qty,
                                             uom=sale_line.product_uom.id, qty_uos =  sale_line.product_uos_qty, uos=sale_line.product_uos.id, 
                                             name=sale_line.name, partner_id=sale_line.order_id.partner_id.id, lang=False, update_tax=True, 
                                             date_order=sale_line.order_id.date_order, packaging=False, fiscal_position=sale_line.order_id.fiscal_position.id, 
                                             flag=False,production_id=sale_line.production_id.id)
+                
+                '''
                 vals = result['value']
                 
+               
                 vals['price_unit']= prices.get('price_unit',0.0)
                 vals['production_avg_cost'] = prices.get('production_avg_cost',0.0)
                 vals['purchase_price'] = prices.get('purchase_price',0.0)            
+                '''
+                sale_line.write(result['value'])
                 
-                sale_line.write(vals)
+                
+            sale_production.action_compute()
+            
             
         return{}
         

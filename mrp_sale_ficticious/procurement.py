@@ -77,6 +77,8 @@ class procurement_order(models.Model):
         res[procurement.id] = new_production
             
         return res
+    
+
 
 
 

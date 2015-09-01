@@ -25,3 +25,4 @@ import wizard
 import procurement
 import account_analytic_line
 import stock
+#import workcenter_lines

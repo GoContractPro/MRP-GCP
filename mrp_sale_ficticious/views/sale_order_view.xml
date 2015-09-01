@@ -19,11 +19,19 @@
             	<xpath expr="//field[@name='order_line']/form/header" position="inside">
             		 
             	     <button name="action_view_mos2" 
-	                    string="View MFG" 
+	                    string="View MFG Estimate" 
 	                    
 	                    type="object" 
 	                    attrs="{'invisible':[('production_id','=',False)]}">
                     </button>
+                    
+                    <button name="action_view_mos3" 
+	                    string="View Production Order" 
+	                    
+	                    type="object" 
+	                    attrs="{'invisible':[('production_actual_id','=',False)]}">
+                    </button>
+                    
                     <button name="action_show_estimated_costs2" 
 	                    string="Costs analysis" 
 	                    type="object" 
@@ -46,13 +54,13 @@
                 <xpath expr="//field[@name='order_line']/tree/field[@name='price_subtotal']" position="after">
                     <field name="production_id" readonly="1"/>
                     <button name="action_view_mos" 
-	                    string="View MFG" 
+	                    string="View MFG Estimate" 
 	                    class="oe_inline oe_stat_button" 
 	                    type="object" icon="STOCK_EDIT" 
 	                    attrs="{'invisible':[('production_id','=',False)]}">
                     </button>
                     <button name="action_show_estimated_costs" 
-	                    string="View MFG Costs" class="oe_inline oe_stat_button" 
+	                    string="View MFG Costs Analysis" class="oe_inline oe_stat_button" 
 	                    type="object" 
 	                    icon="STOCK_INFO" 
 	                    attrs="{'invisible':[('production_id','=',False)]}">
@@ -101,20 +109,20 @@
                        parent.fiscal_position, True, parent.warehouse_id,production_id, production_sale_margin_id)"/>
                    </xpath>
                    
-                   <xpath expr="//field[@name='order_line']/tree//field[@name='product_uom_qty']" position="replace">
+ <!--                  <xpath expr="//field[@name='order_line']/tree//field[@name='product_uom_qty']" position="replace">
                        <field context="{'partner_id':parent.partner_id, 'quantity':product_uom_qty, 'pricelist':parent.pricelist_id, 'uom':product_uom}"
                              name="product_uom_qty" 
                        on_change="product_id_change_sale_mfg(parent.pricelist_id,product_id,product_uom_qty,
                        product_uom,product_uos_qty,False,name,parent.partner_id, False, False, parent.date_order, product_packaging, 
                        parent.fiscal_position, True, parent.warehouse_id, production_id,production_sale_margin_id)" />
                    </xpath>
-                   
+ 
                    <xpath expr="//field[@name='order_line']/form//field[@name='product_uos_qty']" position="replace">
                        <field context="{'partner_id':parent.partner_id, 'quantity':product_uos_qty, 'pricelist':parent.pricelist_id, 'uom':product_uom}"
                              name="product_uos_qty" class="oe_inline"
                        on_change="product_id_change_sale_mfg(parent.pricelist_id,product_id,product_uom_qty,product_uom,product_uos_qty,product_uos,name,parent.partner_id, False, False, parent.date_order, product_packaging, parent.fiscal_position, True, parent.warehouse_id, context)"/>
                    </xpath> 
-                             
+     -->                          
 
             </field>
         </record>

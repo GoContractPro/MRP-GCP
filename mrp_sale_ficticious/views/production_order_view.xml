@@ -19,6 +19,14 @@
             <field name="inherit_id" ref="mrp_operations_extension.mrp_production_form_view_inh" />
             <field name="arch" type="xml">
             	
+            	<xpath expr="//field[@name='workcenter_lines']/form//field[@name='workcenter_id']" position="replace">
+                    
+                </xpath>
+                
+                <xpath expr="//field[@name='workcenter_lines']/form//field[@name='name']" position="before">
+                    <field name="workcenter_id"/>
+                </xpath>
+            	
             	 <field name="workcenter_lines" position="attributes">
             	 	<attribute name="context">{'default_production_id':active_id} </attribute>
             	 </field>
@@ -45,6 +53,9 @@
                             <group string="Duration">
                                 <field name="cycle" />
                                 <field name="hour" widget="float_time" />
+                                <field name="time_start" string="Time Before Prod" widget="float_time"/>
+                                <field name="time_stop" string="Time After Prod." widget="float_time"/>
+                                
                             </group>
                             <group string="Planned Date">
                                 <field name="date_planned" />
@@ -89,7 +100,15 @@
                     <attribute name="states"></attribute>
                     <attribute name="attrs">{'invisible':['|',('is_sale_quote','=',True),'|',('active','=',False),('state','!=','draft')]}</attribute>
                 </button>
-
+                
+                <button name="button_cancel" position="attributes">
+                	<attribute name="states"></attribute>
+                	<attribute name="attrs">{'invisible':['|',('is_sale_quote','=',True),'|',('active','=',False),('state','!=','done','canceled')]}</attribute>
+                </button>	
+				
+				<button name="calculate_production_estimated_cost" position="attributes">
+				 	<attribute name="string">Update Estimated Costs</attribute>
+				</button>
 		        	
          	</field>
          	</record>
