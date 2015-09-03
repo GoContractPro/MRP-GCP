@@ -25,4 +25,5 @@ import wizard
 import procurement
 import account_analytic_line
 import stock
-#import workcenter_lines
+import workcenter_lines
+import mrp_production_product_line

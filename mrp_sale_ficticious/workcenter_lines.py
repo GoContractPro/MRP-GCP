@@ -22,20 +22,72 @@ import math
 from openerp.addons.product import _common
 from openerp import tools
 
+class MrpRoutingWorkcenter(models.Model):
+    _inherit = 'mrp.routing.workcenter'
+
+    @api.multi
+    @api.onchange('workcenter_id')
+    def onchange_workcenter_id(self, workcenter_id):
+        
+        res={}
+        res['value']={}
+        
+        if workcenter_id:
+        
+            wc = self.env['mrp.workcenter'].browse(workcenter_id)           
+            res['value']['name'] = wc.name
+                  
+        return res
+
+
+#TODO add code for next Line Sequence here
+    ''' def default_get(self, cr, uid, var_fields, context=None):
+        a = super(MrpRoutingWorkcenter, self).default_get(
+            cr, uid, var_fields, context=context) 
+        
+        return a
+    '''
+          
+
 class mrp_production_workcenter_line(models.Model):
     _inherit = 'mrp.production.workcenter.line'
     
 
-    
+    @api.multi
+    def _compute_next_sequence(self,production_id):
+        
+        cr = self.env.cr
+        cr.execute('select max(sequence) from mrp_production_workcenter_line '
+                   'where production_id = %s'
+                    ,(production_id,) )
+        max_sequence = cr.fetchone()
+        
+        return int(max_sequence[0]) + 10
+            
     @api.one
     def write(self, vals, update=False):
           
         return super(mrp_production_workcenter_line, self).write(vals,update=update)
+    
+    @api.multi
+    @api.onchange('workcenter_id')
+    def onchange_cycle(self, cycle, workcenter_id):
+        
+        wc = self.env['mrp.workcenter'].browse(workcenter_id)
+        self.hour  = wc.time_cycle * cycle
+        
+        return
  
-    @api.model
+    @api.multi
     @api.onchange('workcenter_id')
     def onchange_workcenter_id(self, workcenter_id):
    
+        
+        res={}
+        production_id = self.env.context.get('default_production_id')
+        production = self.env['mrp.production'].browse(production_id)
+        
+
         if workcenter_id:
             def _factor(factor, product_efficiency, product_rounding):
                 factor = factor / (product_efficiency or 1.0)
@@ -44,15 +96,22 @@ class mrp_production_workcenter_line(models.Model):
                     factor = product_rounding
                 return factor
     
-            factor = _factor(self.production_id.product_qty, self.production_id.bom_id.product_efficiency, self.production_id.bom_id.product_rounding)
+            factor = _factor(production.product_qty, production.bom_id.product_efficiency, production.bom_id.product_rounding)
             
             wc = self.env['mrp.workcenter'].browse(workcenter_id)
             
-            d, m = divmod(factor, wc.capacity_per_cycle)
-            mult = (d + (m and 1.0 or 0.0))
-       
-            self.hour = self.workcenter.time_cycle
-            self.time_start = self.workcenter.time_start
-            self.time_stop = self.workcenter.time_stop
-            self.cycle = mult
-            self.name = tools.ustr(wc.name) + ' - ' + tools.ustr(self.production_id.product_tmpl_id.name_get()[0][1])
+            if  wc.capacity_per_cycle:
+                d, m = divmod(factor, wc.capacity_per_cycle)
+                cycle = (d + (m and 1.0 or 0.0))     
+                hour = wc.time_cycle * cycle
+                
+            res['value'] = {    
+                            'time_start':wc.time_start,
+                            'time_stop':wc.time_stop,
+                            'name':tools.ustr(wc.name) + ' - ' + tools.ustr(production.bom_id.product_tmpl_id.name_get()[0][1]),
+                            'hour':hour,
+                            'cycle':cycle,
+                            
+                            }
+ 
+        return res

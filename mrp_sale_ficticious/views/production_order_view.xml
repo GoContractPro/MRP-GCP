@@ -18,13 +18,20 @@
             <field name="model">mrp.production</field>
             <field name="inherit_id" ref="mrp_operations_extension.mrp_production_form_view_inh" />
             <field name="arch" type="xml">
-            	
+            
+	
             	<xpath expr="//field[@name='workcenter_lines']/form//field[@name='workcenter_id']" position="replace">
-                    
                 </xpath>
                 
+                <field name="production_id" invisible="1"/> 
+                <xpath expr="//field[@name='workcenter_lines']/form//field[@name='cycle']" position="attributes">
+                	
+                	<attribute name="on_change">onchange_cycle(cycle)</attribute>
+                </xpath>
+                
+                
                 <xpath expr="//field[@name='workcenter_lines']/form//field[@name='name']" position="before">
-                    <field name="workcenter_id"/>
+                    <field name="workcenter_id" on_change="onchange_workcenter_id(workcenter_id)"/>
                 </xpath>
             	
             	 <field name="workcenter_lines" position="attributes">
@@ -112,6 +119,8 @@
 		        	
          	</field>
          	</record>
+         	
+
 
         <record id="act_sales_mrp_production" model="ir.actions.act_window">
             <field name="name">Manufacturing Orders</field>

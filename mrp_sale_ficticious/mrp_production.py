@@ -22,8 +22,6 @@
 from openerp import models, fields, api, exceptions, _
 
 
-
-
 class MrpProduction(models.Model):
     _inherit = 'mrp.production'
     

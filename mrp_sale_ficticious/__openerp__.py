@@ -41,7 +41,8 @@
         "wizard/mrp_sale_warning_view.xml",
         "views/sale_order_view.xml",
         "data/prod_sale_margin_data.xml",
-        "data/sale_mrp_production_sequence.xml"
+        "data/sale_mrp_production_sequence.xml",
+        "views/mrp_routing_workcenter.xml",
         ],
     'demo_xml': [],
     'test': [],
