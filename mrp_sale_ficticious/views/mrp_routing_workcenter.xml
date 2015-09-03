@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<openerp>
+    <data>
+		<record id="mrp_routing_workcenter_form_view_npg" model="ir.ui.view">
+            <field name="name">mrp.routing.workcenter.form.npg</field>
+            <field name="model">mrp.routing.workcenter</field>
+            <field name="inherit_id" ref="mrp.mrp_routing_workcenter_form_view" />  
+            <field name="arch" type="xml">
+            
+	             <field name="operation" position="attributes">
+	             	<attribute name="colspan">2</attribute>
+	             </field>
+            	<field name="workcenter_id" position="replace"></field>
+            	<field name="operation" position="after">
+            	    <field name="workcenter_id"
+                		attrs="{'invisible': [('op_wc_lines', '!=', [])]}"
+                    	on_change="onchange_workcenter_id(workcenter_id)"/>
+            	</field>
+            </field>
+       </record>
+       
+        <record id="mrp_routing_form_view_inh" model="ir.ui.view">
+            <field name="name">mrp.routing.form.inh</field>
+            <field name="model">mrp.routing</field>
+            <field name="inherit_id" ref="mrp.mrp_routing_form_view" />
+            <field name="arch" type="xml">
+            
+            	<field name="workcenter_lines" position='replace'>
+            		<field name="workcenter_lines" string="Operation" 
+            		context="{'active_id':active_id}"
+            		widget="one2many_list"/>
+            	
+            	</field>
+            
+            </field>
+           </record>
+   </data>
+</openerp>

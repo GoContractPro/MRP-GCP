@@ -20,6 +20,7 @@
 ##############################################################################
 
 from openerp import models, fields, api, exceptions, _
+import math
 
 
 class MrpProduction(models.Model):
@@ -76,7 +77,7 @@ class MrpProduction(models.Model):
         return product.manual_standard_cost or product.cost_price or product.standard_price 
     
     @api.multi
-    def create_journal_estimate_products(self, product_line= None, sale_order_line=None,  sale_qty=None):
+    def create_journal_estimate_products(self, product_line= None, sale_order_line=None,  factor):
         
         journal = self.env.ref('mrp_production_project_estimated_cost.'
                                      'analytic_journal_materials', False)
@@ -159,7 +160,7 @@ class MrpProduction(models.Model):
                 self.env['account.analytic.line'].create(vals)
                 
     @api.multi
-    def create_journal_estimate_wc_cycle(self, workorder =  None, sale_order_line = None,  sale_qty=None):
+    def create_journal_estimate_wc_cycle(self, workorder =  None, sale_order_line = None,  cycle=None):
          
         if workorder.cycle and workorder.workcenter_id.costs_cycle:
             
@@ -177,7 +178,7 @@ class MrpProduction(models.Model):
             
             qty = workorder.cycle
             
-            if sale_qty: qty = qty*sale_qty
+            qty = qty*cycle
             
             estim_cost = -(workorder.workcenter_id.costs_cycle * qty)         
             
@@ -191,7 +192,7 @@ class MrpProduction(models.Model):
      
            
     @api.multi
-    def create_journal_estimate_wc_hourly(self, workorder=None, wc=None, sale_order_line=None,  sale_qty=None):
+    def create_journal_estimate_wc_hourly(self, workorder=None, wc=None, sale_order_line=None,  cycle=None):
             
         journal = self.env.ref('mrp_production_project_estimated_cost.'
                                      'analytic_journal_machines', False)
@@ -207,7 +208,7 @@ class MrpProduction(models.Model):
             
             hour = workorder.hour
            
-            if sale_qty: hour = hour*sale_qty
+            hour = hour*cycle
             
             if workorder.time_stop and not workorder.workcenter_id.post_op_product:
                 hour += workorder.time_stop
@@ -222,9 +223,10 @@ class MrpProduction(models.Model):
             self.env['account.analytic.line'].create(vals)
 
     @api.multi
-    def create_journal_estimate_operators(self, workorder= None, wc=None, sale_order_line=None,  sale_qty=None):
+    def create_journal_estimate_operators(self, workorder= None, wc=None, sale_order_line=None,  cycle=None):
                          
         if wc.op_number > 0 and workorder.hour:
+            
             if not workorder.workcenter_id.product_id:
                 raise exceptions.Warning(
                     _("There is at least this workcenter without "
@@ -235,6 +237,8 @@ class MrpProduction(models.Model):
             name = (_('%s-%s-%s') %
                     (self.name, workorder.routing_wc_line.operation.code,
                      workorder.workcenter_id.product_id.name))
+            
+            
             estim_cost = -(wc.op_number * wc.op_avg_cost * workorder.hour)
             qty = workorder.hour * wc.op_number
             vals = self._prepare_cost_analytic_line(
@@ -262,28 +266,33 @@ class MrpProduction(models.Model):
                 cond = [('sale_order_line_id', '=', sale_order_line.id)]
                 recs = analytic_line_obj.search(cond)
                 recs.unlink()
+                factor = sale_qty
             else:
                 cond = [('mrp_production_id', '=', record.id)]
                 recs = analytic_line_obj.search(cond)
                 recs.unlink()
+                factor = self.product_qty
                 
             for product_line in record.product_lines:
                 
-                self.create_journal_estimate_products(product_line, sale_order_line, sale_qty)            
+                self.create_journal_estimate_products(product_line, sale_order_line, factor)            
 
             for workorder in record.workcenter_lines:
                 
                 op_wc_lines = workorder.routing_wc_line.op_wc_lines
                 wc = op_wc_lines.filtered(lambda r: r.workcenter == workorder.workcenter_id) or workorder.workcenter_id
                 
-                self.create_journal_estimate_wc_cycle(workorder, sale_order_line, sale_qty)
-                self.create_journal_estimate_wc_hourly(workorder, wc, sale_order_line, sale_qty)
+                cycle = wc.cycle_nbr and int(math.ceil(factor / wc.cycle_nbr)) or 0
+                
+                self.create_journal_estimate_wc_cycle(workorder, sale_order_line, cycle)
+                self.create_journal_estimate_wc_hourly(workorder, wc, sale_order_line, cycle)
                 self.create_journal_estimate_pre_operations(workorder, wc, sale_order_line)
                 self.create_journal_estimate_post_operations(workorder, wc, sale_order_line)
-                self.create_journal_estimate_operators(workorder, wc, sale_order_line, sale_qty)
+                self.create_journal_estimate_operators(workorder, wc, sale_order_line, cycle)
 
         return
     
+
     @api.multi                
     def _prepare_cost_analytic_line(self, journal, name, production = None , product = None,
                                     general_account=None, workorder=None,

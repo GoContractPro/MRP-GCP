@@ -1,8 +1,5 @@
-
 # -*- encoding: utf-8 -*-
 ##############################################################################
-#
-#    Daniel Campos (danielcampos@avanzosc.es) Date: 15/10/2014
 #
 #    This program is free software: you can redistribute it and/or modify
 #    it under the terms of the GNU Affero General Public License as published
@@ -19,6 +16,34 @@
 #
 ##############################################################################
 
-from . import mrp_production
-from . import mrp_production_product_line
-from . import workcenter_lines
+from openerp import models, fields, api, _
+
+class MrpProductionProductLine(models.Model):
+    _inherit = 'mrp.production.product.line'
+
+    @api.multi
+    @api.onchange('product_id')
+    def onchange_product_id(self, product_id):
+        
+        res={}
+        res['value']={}
+        
+        if product_id:
+        
+            product = self.env['product.product'].browse(product_id)           
+            res['value']['name'] = product.name
+                  
+        return res
+    
+
+    @api.model
+    def default_get(self, var_fields):
+            
+ 
+        res = super(MrpProductionProductLine, self).default_get(
+            var_fields) 
+ 
+        production_id = self.env.context.get('active_id',False)
+        res['production_id'] = production_id
+        
+        return res 
