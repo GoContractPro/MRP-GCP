@@ -22,13 +22,11 @@
 	
             	<xpath expr="//field[@name='workcenter_lines']/form//field[@name='workcenter_id']" position="replace">
                 </xpath>
-                
-                <field name="production_id" invisible="1"/> 
-
-            	 
-            	 <field name="production_id" position="attributes">
+             
+  				<xpath expr="//field[@name='workcenter_lines']/form//field[@name='production_id']" position="attributes">	 
             	 	<attribute name="readonly">1</attribute>
-            	 </field>
+            	 </xpath>
+            	 
 
          	     <page string="Consumed Products" position="attributes" >
          	     	<attribute name="attrs">{'invisible':[('is_sale_quote','=',True)]}</attribute>
