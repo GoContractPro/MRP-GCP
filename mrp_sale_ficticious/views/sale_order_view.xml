@@ -19,7 +19,7 @@
             	<xpath expr="//field[@name='order_line']/form/header" position="inside">
             		 
             	     <button name="action_view_mos2" 
-	                    string="View MFG Estimate" 
+	                    string="View MFG Products and Work" 
 	                    
 	                    type="object" 
 	                    attrs="{'invisible':[('production_id','=',False)]}">
@@ -54,13 +54,13 @@
                 <xpath expr="//field[@name='order_line']/tree/field[@name='price_subtotal']" position="after">
                     <field name="production_id" readonly="1"/>
                     <button name="action_view_mos" 
-	                    string="View MFG Estimate" 
+	                    string="Edit Scheduled Products and Work" 
 	                    class="oe_inline oe_stat_button" 
 	                    type="object" icon="STOCK_EDIT" 
 	                    attrs="{'invisible':[('production_id','=',False)]}">
                     </button>
                     <button name="action_show_estimated_costs" 
-	                    string="View MFG Costs Analysis" class="oe_inline oe_stat_button" 
+	                    string="View Costs Analysis" class="oe_inline oe_stat_button" 
 	                    type="object" 
 	                    icon="STOCK_INFO" 
 	                    attrs="{'invisible':[('production_id','=',False)]}">

@@ -77,7 +77,7 @@ class MrpProduction(models.Model):
         return product.manual_standard_cost or product.cost_price or product.standard_price 
     
     @api.multi
-    def create_journal_estimate_products(self, product_line= None, sale_order_line=None,  factor):
+    def create_journal_estimate_products(self, product_line= None, sale_order_line=None,  factor = 0):
         
         journal = self.env.ref('mrp_production_project_estimated_cost.'
                                      'analytic_journal_materials', False)
@@ -89,7 +89,7 @@ class MrpProduction(models.Model):
         name = _('%s-%s' % (self.name, product_line.work_order.name or ''))
         
         qty = product_line.product_qty
-        if sale_qty: qty = qty*sale_qty
+        qty = qty*factor
         
         amount = -qty * self.get_product_cost(product_line.product_id)
         
@@ -160,7 +160,7 @@ class MrpProduction(models.Model):
                 self.env['account.analytic.line'].create(vals)
                 
     @api.multi
-    def create_journal_estimate_wc_cycle(self, workorder =  None, sale_order_line = None,  cycle=None):
+    def create_journal_estimate_wc_cycle(self, workorder =  None, sale_order_line = None,  cycle=0):
          
         if workorder.cycle and workorder.workcenter_id.costs_cycle:
             
@@ -192,7 +192,7 @@ class MrpProduction(models.Model):
      
            
     @api.multi
-    def create_journal_estimate_wc_hourly(self, workorder=None, wc=None, sale_order_line=None,  cycle=None):
+    def create_journal_estimate_wc_hourly(self, workorder=None, wc=None, sale_order_line=None,  cycle=0):
             
         journal = self.env.ref('mrp_production_project_estimated_cost.'
                                      'analytic_journal_machines', False)
@@ -239,7 +239,10 @@ class MrpProduction(models.Model):
                      workorder.workcenter_id.product_id.name))
             
             
-            estim_cost = -(wc.op_number * wc.op_avg_cost * workorder.hour)
+            hour = workorder.hour
+            hour = hour*cycle
+            
+            estim_cost = -(wc.op_number * wc.op_avg_cost * hour)
             qty = workorder.hour * wc.op_number
             vals = self._prepare_cost_analytic_line(
                 journal, name, self, workorder.workcenter_id.product_id,
@@ -278,11 +281,25 @@ class MrpProduction(models.Model):
                 self.create_journal_estimate_products(product_line, sale_order_line, factor)            
 
             for workorder in record.workcenter_lines:
+# TODO: code here would optionally get work center Cycle Capacity fRom Possible Workcenters
+#        need to define a rule on selecting the possible WC based on Cost or Capacity
+
+                cycle_capacity = workorder.routing_wc_line.cycle_nbr
                 
-                op_wc_lines = workorder.routing_wc_line.op_wc_lines
-                wc = op_wc_lines.filtered(lambda r: r.workcenter == workorder.workcenter_id) or workorder.workcenter_id
-                
-                cycle = wc.cycle_nbr and int(math.ceil(factor / wc.cycle_nbr)) or 0
+                possible_wc = workorder.routing_wc_line.op_wc_lines
+                wc_from_possible_wc = possible_wc.filtered(lambda r: r.workcenter == workorder.workcenter_id) 
+                if wc_from_possible_wc:
+                    wc = wc_from_possible_wc.workcenter
+                    cycle_capacity = wc_from_possible_wc.capacity_per_cycle  or 0
+               
+                else:
+                    wc = workorder.routing_wc_line.workcenter_id
+                    cycle_capacity = workorder.routing_wc_line.cycle_nbr or 0
+                    
+                if cycle_capacity:
+                    cycle = cycle_capacity and int(math.ceil(factor / cycle_capacity)) or 0
+                else:
+                    cycle = 0
                 
                 self.create_journal_estimate_wc_cycle(workorder, sale_order_line, cycle)
                 self.create_journal_estimate_wc_hourly(workorder, wc, sale_order_line, cycle)

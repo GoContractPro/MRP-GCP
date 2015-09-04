@@ -141,7 +141,7 @@ class WizSaleCreateFictious(models.Model):
                 
                 
             sale_production.action_compute()
-            
+            sale_production.calculate_production_estimated_cost()
             
         return{}
         
