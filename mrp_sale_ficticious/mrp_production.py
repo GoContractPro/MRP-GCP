@@ -363,7 +363,7 @@ class MrpProduction(models.Model):
     def write(self, vals, update=True, mini=True):
 
         self.update_sale_lines_producion_cost_estimates()
-        self.calculate_production_estimated_cost()
+#        self.calculate_production_estimated_cost()
 
         return super(MrpProduction, self).write(vals,update=update,mini=mini)
     

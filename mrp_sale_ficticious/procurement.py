@@ -79,7 +79,17 @@ class procurement_order(models.Model):
         return res
     
 
+    def _prepare_mo_vals(self, cr, uid, procurement, context=None):
+    
 
+        res =  super(procurement_order, self)._prepare_mo_vals(cr, uid, procurement, context=context)
+        
+        if procurement and procurement.main_project_id and procurement.main_project_id.analytic_account_id:
+            
+            res['analytic_account_id'] = procurement.main_project_id.analytic_account_id.id
+            res['project_id'] = procurement.main_project_id.id
+
+        return res  
 
 
             
