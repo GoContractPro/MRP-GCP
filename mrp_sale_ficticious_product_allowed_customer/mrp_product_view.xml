@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<openerp>
+	<data>
+		
+		 <record model="ir.ui.view" id="product_template_customer_inherit">
+            <field name="name">product.template.customer_inherit</field>
+            <field name="model">product.template</field>
+            <field name="inherit_id" ref="product.product_template_form_view" />
+            <field name="arch" type="xml">
+                <xpath expr="//separator[@string='Description for Quotations']" position="before">
+                	<group name="customer_id" string="Customer" colspan="3">
+	                    <label for="customer_id"/>
+	                    <div>
+	                         <field name="customer_id"/>
+	                    </div>
+	                </group>
+                </xpath>
+            </field>
+        </record>
+		
+		 <record id="wiz_sale_create_fictitious_of_inheritview" model="ir.ui.view">
+            <field name="name">wiz.sale.create.fictitious.inherit</field>
+            <field name="model">wiz.sale.create.fictitious</field>
+            <field name="inherit_id" ref="mrp_sale_ficticious.wiz_sale_create_fictitious_of_view"/>
+            <field name="arch" type="xml">
+            	<xpath expr="//field[@name='product_id']" position="before">
+            		<field name="customer_id" invisible="1"/>
+            	</xpath>	
+            	<xpath expr="//field[@name='product_id']" position="attributes">
+        				<attribute name="domain">[('customer_id','=',customer_id)]</attribute>
+    			</xpath>
+			</field>
+		</record>
+		
+		<menuitem
+            action="product.product_category_action"
+            id="menu_mrp_prod_by_categ"
+            parent="mrp.menu_mrp_bom"
+            sequence="11"/>
+
+	</data>
+</openerp>
