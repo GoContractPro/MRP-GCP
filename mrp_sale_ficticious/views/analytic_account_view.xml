@@ -29,6 +29,30 @@
 			</field>
 		</record>
 		
+		<record id="estimated_cost_list_view" model="ir.ui.view">
+			<field name="name">estimated.cost.list.view</field>
+			<field name="model">account.analytic.line</field>
+			<field name="priority" eval="50"/>
+			<field name="arch" type="xml">
+				<tree string="Estimated Costs">
+					<field name="date"/>
+					<field name="product_id"/>
+					<field name="ref"/>
+					<field name="name"/>
+					<field name="user_id"/>
+					<field name="journal_id"/>
+					<field name="estim_std_cost" invisible="1" string="Total Standard"/>
+					<field name="estim_avg_cost" string="Estimated Cost" sum="Total Average"/>
+					<field name="amount" sum="Actual Totals"/>
+					<field name="unit_amount"/>
+					<field name="account_id"/>
+					<field name="general_account_id" invisible="context.get('to_invoice', False)"/>
+					<field name="mrp_production_id"/>
+					<field name="workorder"/>
+				</tree>
+			</field>
+		</record>
+		
 		
 	</data>
 </openerp>
