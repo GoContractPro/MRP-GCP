@@ -24,4 +24,4 @@ class AccountAnalyticLine(models.Model):
     _inherit = 'account.analytic.line'
 
 
-    sale_order_line_id = fields.Many2one('sale.order.line', 'Sales Line')
+    sale_order_line_id = fields.Many2one('sale.order.line', 'Sales Line',ondelete="cascade")

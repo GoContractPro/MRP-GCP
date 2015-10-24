@@ -49,7 +49,6 @@ class procurement_order(models.Model):
         defaults['project_id'] = procurement.main_project_id.id       
         defaults['is_sale_quote'] = False
         defaults['origin'] = (procurement.sale_line_id.order_id.name or '') + "[MFG-" + (procurement.name or '') + "]"
-
         new_production = procurement.sale_line_id.production_id.copy(defaults)
 
         qty =  procurement.product_qty
@@ -85,6 +84,8 @@ class procurement_order(models.Model):
         res =  super(procurement_order, self)._prepare_mo_vals(cr, uid, procurement, context=context)
         
         if procurement and procurement.main_project_id and procurement.main_project_id.analytic_account_id:
+            #verts field for fetching the route from sale order line
+            res['mrp_routing_id'] = procurement.sale_line_id and procurement.sale_line_id.mrp_routing_id and procurement.sale_line_id.mrp_routing_id.id or False
             
             res['analytic_account_id'] = procurement.main_project_id.analytic_account_id.id
             res['project_id'] = procurement.main_project_id.id

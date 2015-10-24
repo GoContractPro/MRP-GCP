@@ -110,7 +110,6 @@ class WizSaleCreateFictious(models.Model):
 #                new_production.project_id.write({"parent_id":self.project_id.id})
                 
             for qty in self.product_qtys:              
-                
                 sale_line = sale_line_obj.create({'order_id':active_id,
                                               'product_id':self.product_id.id,
                                               'name': (self.name or ''),
@@ -118,9 +117,10 @@ class WizSaleCreateFictious(models.Model):
                                               'product_uom_qty':qty.product_qty,
                                               'production_id':sale_production.id,
                                               'mfg_quote':True,
+                                              'mrp_routing_id':self.routing_id and self.routing_id.id or False
                                               })
                 
-#                prices = sale_line.get_sale_line_production_price_vals(product_uom_qty = qty.product_qty, production_sale_margin_id = self.production_sale_margin_id.id)
+#               prices = sale_line.get_sale_line_production_price_vals(product_uom_qty = qty.product_qty, production_sale_margin_id = self.production_sale_margin_id.id)
                 
                 
                 result = sale_line.product_id_change_sale_mfg(sale_line.order_id.pricelist_id.id, sale_line.product_id.id,sale_line.product_uom_qty,

@@ -355,7 +355,6 @@ class MrpProduction(models.Model):
             else:
                 values['name'] = sequence_obj.get('fictitious.mrp.production')
         
-            
         return super(MrpProduction, self).create(values)
     
 

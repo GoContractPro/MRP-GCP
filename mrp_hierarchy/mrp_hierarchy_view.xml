@@ -7,7 +7,7 @@
 			<field name="inherit_id" ref="mrp.mrp_production_form_view" />
 			<field name="arch" type="xml">
 				<field name="origin" position="after">
-					<field name="production_id" readonly="True" attrs="{'invisible':[('production_id', '=', False)]}"/>
+					<field name="production_id" readonly="1" attrs="{'invisible':[('production_id', '=', False)]}"/>
 <!--					<field name="bom_seq" readonly="True"/-->
 				</field>
 				<field name="name" position="replace">

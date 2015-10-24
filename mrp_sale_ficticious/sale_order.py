@@ -64,6 +64,8 @@ class sale_order_line(models.Model):
     production_sale_margin_id = fields.Many2one('production.sale.margin','Mfg Sales Multiplier ')
     analytic_line_ids = fields.One2many(comodel_name="account.analytic.line", inverse_name="sale_order_line_id",string="Cost Lines")
     is_approved = fields.Boolean('Production Approved')
+   #Verts for routing fieldis added
+    mrp_routing_id = fields.Many2one('mrp.routing','Routing')
     
     
     _defaults = {

@@ -1,36 +1,35 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <openerp>
-    <data>       
-            
-            <record id="estimated_cost_list_view_inherit1" model="ir.ui.view">
-            <field name="name">estimated.cost.list.view</field>
-            <field name="model">account.analytic.line</field>
-            <field name="inherit_id" ref="mrp_production_project_estimated_cost.view_account_analytic_line_tree_inh_estimatedcost"/>
-            <field name="priority" eval="16"/>
-            	<field name="arch" type="xml">
-                
-	                 <field name="date" position="after">
-	                 	 <field  name="product_id" />
-	                 </field>
-	                 
-					<field name="estim_avg_cost" position="attributes" >
-						<attribute name="sum">Total Average</attribute>
-						<attribute name="string">Estimated Cost</attribute>
-					</field>
-                    
-                    <field name="estim_std_cost" position="attributes">
-                    	<attribute name="sum">Total Standard"</attribute>
-                    	<attribute name="invisible">True</attribute>
-                    	
-                    </field>	
-                    <field name="amount" position="attributes">
-                    	<attribute name="sum">Actual Totals</attribute>
-                    </field>
-                 
-            	</field>
-            </record>
-            
-       
-    </data>
+	<data>
+		
+		<record id="estimated_cost_list_view_inherit1" model="ir.ui.view">
+			<field name="name">estimated.cost.list.view</field>
+			<field name="model">account.analytic.line</field>
+			<field name="inherit_id" ref="mrp_production_project_estimated_cost.view_account_analytic_line_tree_inh_estimatedcost"/>
+			<field name="priority" eval="16"/>
+			<field name="arch" type="xml">
+				<field name="date" position="after">
+					<field  name="product_id" />
+				</field>
+				
+				<field name="estim_avg_cost" position="attributes" >
+					<attribute name="sum">Total Average</attribute>
+					<attribute name="string">Estimated Cost</attribute>
+				</field>
+				
+				<field name="estim_std_cost" position="attributes">
+					<attribute name="sum">Total Standard"</attribute>
+					<attribute name="invisible">True</attribute>
+					
+				</field>
+				<field name="amount" position="attributes">
+					<attribute name="sum">Actual Totals</attribute>
+				</field>
+				
+			</field>
+		</record>
+		
+		
+	</data>
 </openerp>
             

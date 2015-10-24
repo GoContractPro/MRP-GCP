@@ -83,14 +83,22 @@ class mrp_sale_warning(models.TransientModel):
     @api.multi
     def action_continue_sale_confirm(self):
         
-#        self.ensure_one()
         active_id = self.env.context['active_id']
         active_model = self.env.context['active_model']
         if active_model == 'sale.order':
-            
             sale_obj = self.env['sale.order'].browse(active_id)
             sale_line_obj = self.env['sale.order.line']
+            analytic_line_obj = self.env['account.analytic.line'] 
             lines = sale_line_obj.browse(self.lines_to_delete)
+            #delete those analytic lines which sale order 
+            #line production approved field is unchecked 
+            lines_delete_lst = []
+            [lines_delete_lst.append(rec.id) for rec in sale_obj.order_line if rec.production_id and not rec.is_approved]
+            if lines_delete_lst:
+                analytic_line_id = analytic_line_obj.search([('sale_order_line_id','in',lines_delete_lst)])
+                if analytic_line_id :
+                    for rec in analytic_line_id:rec.unlink()
+                    
             if lines:
                 lines.unlink()
             return sale_obj.action_button_confirm()
