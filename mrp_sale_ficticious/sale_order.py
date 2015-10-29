@@ -155,7 +155,14 @@ class sale_order_line(models.Model):
         line_confirm = []
         line_name_delete = []
         sale_line_obj = self.env['sale.order.line']
+        analytic_line_obj = self.env['account.analytic.line']
+
         for sale_line in self:
+            analytic_line_list = analytic_line_obj.search(
+            ['|',('sale_order_line_id', '=', sale_line.id),('mrp_production_id', '=', sale_line.production_id.id),
+             ('task_id', '=', False)])
+            analytic_line_list.unlink()
+            
             if sale_line.production_id and not sale_line.is_approved :
                 line_delete.append(sale_line.id)
                 line_name_delete.append("Line:" + str(sale_line.sequence) + "-" + sale_line.name)
@@ -331,7 +338,7 @@ class sale_order(models.Model):
  #       for line in self.order_line:
  #           if line.product_id and not line.is_approved:
  #               msg += _('%s on Order Line %s Quantity %s will be deleted \n'% (line.product_id.name, line.sequence, line.product_uom_qty))
-                
+              
         for sale_line in self.order_line:
             if sale_line.production_id and not sale_line.is_approved:
                 lines_delete.append(sale_line.id)
@@ -340,6 +347,14 @@ class sale_order(models.Model):
         if lines_delete :           
             return self.env['mrp.sale.warning'].delete_with_warning('Confirm Delete',message=msg,lines_delete=lines_delete)
         else:
+            if self.main_project_id:
+                analytic_line_obj = self.env['account.analytic.line']
+    
+                analytic_line_list = analytic_line_obj.search(
+                [('account_id', '=', self.main_project_id.analytic_account_id.id),
+                 ('task_id', '=', False)])
+                analytic_line_list.unlink()
+            
             return super(sale_order, self).action_button_confirm()
         
     
