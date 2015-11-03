@@ -376,6 +376,26 @@ class MrpProduction(models.Model):
         return super(MrpProduction, self).copy( default)
             
 
-         
-
- 
+    @api.multi
+    def action_compute(self, properties=None):
+        project_obj = self.env['project.project']
+        for record in self:
+            if not record.project_id:
+                project = project_obj.search([('name', '=', record.name)],
+                                             limit=1)
+                if not project:
+                    project_vals = {
+                        'name': record.name,
+                        'use_tasks': True,
+                        'use_timesheets': True,
+                        'use_issues': True,
+                        'automatic_creation': True,
+                    }
+                    project = project_obj.create(project_vals)
+                    
+#                 Verts : Parent child hierarchy for project
+                if record.production_id and record.production_id.project_id:
+                    project.analytic_account_id.parent_id = record.production_id.project_id.analytic_account_id.id
+                record.project_id = project.id
+                record.analytic_account_id = project.analytic_account_id.id
+        return super(MrpProduction, self).action_compute(properties=properties)
