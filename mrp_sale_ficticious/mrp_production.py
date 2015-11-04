@@ -49,8 +49,11 @@ class MrpProduction(models.Model):
             [('sale_order_line_id', '=', self.sale_order_line_id.id),
              ('task_id', '=', False)])        
         else:
+            sub_ids = self.env['mrp.production'].search([('production_id','=',self.id)])
+            pids = [sub_id.id for sub_id in sub_ids]
+            pids.append(self.id)
             analytic_line_list = analytic_line_obj.search(
-            [('mrp_production_id', '=', self.id),
+            [('mrp_production_id', 'in', pids),
              ('task_id', '=', False)])
         self = self.with_context(
                                  search_default_group_workorder=1,
@@ -265,16 +268,27 @@ class MrpProduction(models.Model):
         for record in self:
             
             analytic_line_obj = self.env['account.analytic.line']
-            if sale_order_line:
-                cond = [('sale_order_line_id', '=', sale_order_line.id)]
-                recs = analytic_line_obj.search(cond)
-                recs.unlink()
-                factor = sale_qty
-            else:
-                cond = [('mrp_production_id', '=', record.id)]
-                recs = analytic_line_obj.search(cond)
-                recs.unlink()
-                factor = self.product_qty
+            #===================================================================
+            # Removed condition temporarily because sub assemblies qutation deletion other analytic lines.
+            #===================================================================
+#             if sale_order_line:
+#                 cond = [('sale_order_line_id', '=', sale_order_line.id)]
+#                 recs = analytic_line_obj.search(cond)
+#                 recs.unlink()
+#                 factor = sale_qty
+#             else:
+#                 cond = [('mrp_production_id', '=', record.id)]
+#                 recs = analytic_line_obj.search(cond)
+#                 recs.unlink()
+#                 factor = self.product_qty
+
+#             if sale_order_line:
+#                 factor = sale_qty
+#             else:
+#                 cond = [('mrp_production_id', '=', record.id)]
+#                 recs = analytic_line_obj.search(cond)
+#                 recs.unlink()
+            factor = self.product_qty
                 
             for product_line in record.product_lines:
                 

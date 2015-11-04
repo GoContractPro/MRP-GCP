@@ -227,7 +227,7 @@ class WizSaleCreateFictious(models.Model):
                 if procure_method == 'make_to_order' and rule_id and rule_id.action == 'manufacture':
                     sub_name = sequence_obj.get('sale.mrp.production')
                     sub_project_obj = project_model.create({'name':sub_name})
-                    sub_project_obj.analytic_account_id.parent_id = self.project_id.analytic_account_id.id
+                    sub_project_obj.analytic_account_id.parent_id = project_obj.analytic_account_id.id
                     sub_vals = {'product_id': res['product_id'],
                         'product_qty': res['product_qty'],
                         'date_planned': self.date_planned,

@@ -158,8 +158,11 @@ class sale_order_line(models.Model):
         analytic_line_obj = self.env['account.analytic.line']
 
         for sale_line in self:
+            sub_ids = self.env['mrp.production'].search([('production_id','=',sale_line.production_id.id)])
+            pids = [sub_id.id for sub_id in sub_ids]
+            pids.append(sale_line.production_id.id)
             analytic_line_list = analytic_line_obj.search(
-            ['|',('sale_order_line_id', '=', sale_line.id),('mrp_production_id', '=', sale_line.production_id.id),
+            ['|',('sale_order_line_id', '=', sale_line.id),('mrp_production_id', 'in', pids),
              ('task_id', '=', False)])
             analytic_line_list.unlink()
             
@@ -183,6 +186,9 @@ class sale_order_line(models.Model):
         
         if self.production_id:
             self.production_id._calculate_production_estimated_cost(sale_order_line=self, sale_qty = product_uom_qty)
+            sub_ids = self.env['mrp.production'].search([('production_id','=',self.production_id.id)])
+            for sub_id in sub_ids:
+                sub_id._calculate_production_estimated_cost(sale_order_line=self, sale_qty = product_uom_qty)
         else:
             raise exceptions.Warning(
                     _("Sales line has no MFG orders."))
