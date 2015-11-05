@@ -181,8 +181,8 @@ class MrpProduction(models.Model):
             product = workorder.workcenter_id.product_id
             
             qty = workorder.cycle
-            
-            qty = qty*cycle
+            if sale_order_line:
+            	qty = qty*cycle
             
             estim_cost = -(workorder.workcenter_id.costs_cycle * qty)         
             
@@ -211,8 +211,8 @@ class MrpProduction(models.Model):
                      workorder.workcenter_id.name))
             
             hour = workorder.hour
-           
-            hour = hour*cycle
+            if sale_order_line:
+            	hour = hour*cycle
             
             if workorder.time_stop and not workorder.workcenter_id.post_op_product:
                 hour += workorder.time_stop
