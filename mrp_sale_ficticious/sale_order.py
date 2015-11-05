@@ -198,12 +198,12 @@ class sale_order_line(models.Model):
         production_cost = sum([line.estim_avg_cost for line in
                              analytic_lines])
         
-        unit_avg_cost =  - production_cost
+        unit_avg_cost =  - production_cost / product_uom_qty
         
-        multiplier = self.env['production.sale.margin'].browse(production_sale_margin_id).multiplier or 1.0
+#         multiplier = self.env['production.sale.margin'].browse(production_sale_margin_id).multiplier or 1.0
         
         if self.production_sale_margin_id :
-            
+            multiplier = self.production_sale_margin_id.multiplier or 1.0
             price = unit_avg_cost * multiplier
         
         else:

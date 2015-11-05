@@ -282,13 +282,10 @@ class MrpProduction(models.Model):
 #                 recs.unlink()
 #                 factor = self.product_qty
 
-#             if sale_order_line:
-#                 factor = sale_qty
-#             else:
-#                 cond = [('mrp_production_id', '=', record.id)]
-#                 recs = analytic_line_obj.search(cond)
-#                 recs.unlink()
-            factor = self.product_qty
+            if sale_order_line:
+                factor = sale_qty
+            else:
+                factor = self.product_qty
                 
             for product_line in record.product_lines:
                 
