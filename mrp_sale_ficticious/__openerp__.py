@@ -32,7 +32,7 @@
     'author': 'NovaPoint Group Inc, Stephen Levenhagen',
     'website': 'www.novapointgroup.com',
     'depends': ['sale','sale_stock','sale_margin','mrp_operations','mrp_production_project_estimated_cost',
-                'mrp_production_editable_scheduled_products','sale_mrp_project_link','mrp_project_link','mrp_hierarchy'],
+                'mrp_production_editable_scheduled_products','sale_mrp_project_link','mrp_project_link','mrp_hierarchy','hr_timesheet'],
     'init_xml': [],
     'data': [
         "views/analytic_account_view.xml",

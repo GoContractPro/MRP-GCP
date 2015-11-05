@@ -155,7 +155,44 @@
 
         <menuitem action="sale_mrp_fictitious_production_action" id="menu_sale_mrp_fictitious_production_action"
             parent="mrp.menu_mrp_manufacturing" sequence="10"/>
-            
+        
+
+    	<record id="estimated_cost_list_view" model="ir.ui.view">
+            <field name="name">estimated.cost.list.view</field>
+            <field name="model">account.analytic.line</field>
+            <field name="priority" eval="50"/>
+            <field name="arch" type="xml">
+                <tree string="Estimated Costs">
+                    <field name="date"/>
+					<field name="product_id"/>                    
+                    <field name="ref"/>
+                    <field name="name"/>
+                    <field name="user_id"/>
+                    <field name="journal_id"/>
+					<field name="estim_std_cost" invisible="1" string="Total Standard"/>                      
+					<field name="estim_avg_cost" string="Estimated Cost" sum="Total Average"/>                    
+                    <field name="amount" sum="Actual Totals"/>
+                     <field name="unit_amount"/>
+                     <field name="account_id"/>
+					<field name="general_account_id" invisible="context.get('to_invoice', False)"/>
+                    <field name="mrp_production_id"/>
+                    <field name="workorder"/>
+                </tree>
+            </field>
+        </record>
+        
+          <record id="mrp_production_project_estimated_cost.action_show_production_anaytic_lines" model="ir.actions.act_window">
+            <field name="name">Production Analytic Lines</field>
+            <field name="type">ir.actions.act_window</field>
+            <field name="res_model">account.analytic.line</field>
+            <field name="view_type">form</field>
+            <field name="view_mode">tree,form</field>
+            <field name="view_id" eval="estimated_cost_list_view"/>
+            <field name="context">{'default_mrp_production_id': active_id,
+                                   'search_default_group_analytic_account': 1,
+                                   'search_default_group_journal': 1}</field>
+            <field name="domain">["|",('mrp_production_id','=',active_id),('mrp_production_id.production_id','=',active_id)]</field>
+        </record>            
 <!--         <delete model="ir.ui.menu" id="mrp_production_project_estimated_cost.menu_mrp_fictitious_production_action" />
   -->          
 

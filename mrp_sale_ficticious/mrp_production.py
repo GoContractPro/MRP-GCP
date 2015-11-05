@@ -56,7 +56,7 @@ class MrpProduction(models.Model):
             [('mrp_production_id', 'in', pids),
              ('task_id', '=', False)])
         self = self.with_context(
-                                 search_default_group_workorder=1,
+                                 search_default_group_analytic_account=1,
                                  search_default_group_journal=1)
         return {
             'view_type': 'form',

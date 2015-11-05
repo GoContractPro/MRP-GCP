@@ -198,7 +198,7 @@ class sale_order_line(models.Model):
         production_cost = sum([line.estim_avg_cost for line in
                              analytic_lines])
         
-        unit_avg_cost =  - production_cost / product_uom_qty
+        unit_avg_cost =  - production_cost
         
         multiplier = self.env['production.sale.margin'].browse(production_sale_margin_id).multiplier or 1.0
         
@@ -240,7 +240,7 @@ class sale_order_line(models.Model):
             [('sale_order_line_id', '=', self.id),
              ('task_id', '=', False)])
         self = self.with_context(
-                                 search_default_group_workorder=1,
+                                 search_default_group_analytic_account=1,
                                  search_default_group_journal=1)
         return {
             'view_type': 'form',
@@ -269,7 +269,7 @@ class sale_order_line(models.Model):
             [('sale_order_line_id', '=', self.id),
              ('task_id', '=', False)])
         self = self.with_context(
-                                 search_default_group_workorder=1,
+                                 search_default_group_analytic_account=1,
                                  search_default_group_journal=1)
         return {
             'view_type': 'form',
