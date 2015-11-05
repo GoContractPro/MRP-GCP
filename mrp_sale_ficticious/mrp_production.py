@@ -92,7 +92,8 @@ class MrpProduction(models.Model):
         name = _('%s-%s' % (self.name, product_line.work_order.name or ''))
         
         qty = product_line.product_qty
-        qty = qty*factor
+        if sale_order_line:
+            qty = qty*factor
         
         amount = -qty * self.get_product_cost(product_line.product_id)
         
